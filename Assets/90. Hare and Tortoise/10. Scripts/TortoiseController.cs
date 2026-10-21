@@ -11,6 +11,7 @@ namespace HareAndTortoise
         [SerializeField] private float runSpeed = 7f;
         [SerializeField] private float horizontalSensitivity = 1.0f;
         [SerializeField] private float verticalSensitivity = 1.0f;
+        [SerializeField] private float lockOnSensitivity = 0.1f;
         
         [SerializeField] private float pitchAngleMin;
         [SerializeField] private float pitchAngleMax;
@@ -31,14 +32,12 @@ namespace HareAndTortoise
 
         private void Update()
         {
-            InitAll();
             UpdatePosition();
             UpdateAngle();
 
             // 조준 및 발사
             if (SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right))
             {
-                LockOn();
                 if (SimpleInput.GetMouseButtonDown(SimpleInput.MouseButton.Left))
                 {
                     Debug.Log("발사");
@@ -54,15 +53,18 @@ namespace HareAndTortoise
         private void UpdateAngle()
         {
             Vector2 delta = SimpleInput.GetMouseDelta();
-            angleX -= delta.y * verticalSensitivity;
-            angleY += delta.x * horizontalSensitivity;
+            // 우클릭 시(락온 시) 감도 떨구기
+            angleX -= SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right)
+                ? (delta.y * verticalSensitivity) * lockOnSensitivity : (delta.y * verticalSensitivity);
+            angleY += SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right)
+                ? (delta.x * horizontalSensitivity) * lockOnSensitivity : (delta.x * horizontalSensitivity);
             angleX = Mathf.Clamp(angleX, pitchAngleMin, pitchAngleMax);
         }
         
         private void UpdatePosition()
         {
             Vector2 inputAxis = SimpleInput.GetMoveAxisRaw();
-            if (inputAxis.sqrMagnitude < 1) return;
+            if (inputAxis.sqrMagnitude < 0.00001f) return;
             
             // inputAxis를 3차원 입력 벡터로 바꿔줍니다.
             Vector3 inputVector = new Vector3(inputAxis.x, 0f, inputAxis.y);
@@ -85,6 +87,12 @@ namespace HareAndTortoise
 
         private void UpdateCameraRotation()
         {
+            // 우클릭 시(락온 시) 카메라 거리 가깝게
+            float targetDistance =
+                SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right) ? 2f : 4f;
+
+            distance = Mathf.Lerp(distance, targetDistance, 5f * Time.deltaTime);
+            
             cameraPivot.rotation = Quaternion.Euler(angleX, angleY, 0f);
             cameraTransform.localPosition = new Vector3(1.5f, 0f, -distance);
         }
@@ -94,27 +102,6 @@ namespace HareAndTortoise
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
         }
-        
-        
-        # region 조준
-        
-        // 우클릭 누르면 카메라를 조금 더 가까이
-        // 카메라 앵글 및 감도 극도로 제한 (카메라 앵글 제한할 변수도 추가로 필요할지도)
-        // 중앙에 조준선 만들기 (이건 UI 만들면서 같이 해도 될듯)
-
-        private void InitAll()
-        {
-            distance = 4;
-        }
-        
-        private void LockOn()
-        {
-            // 스무스하게 들어갈 수 있게 조치를 취하면 좋을듯. 일단 이건 좀따 다시 ㄱㄱ
-            distance = 2f;
-        }
-        
-        
-        # endregion
     }
 }
 
