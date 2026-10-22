@@ -9,8 +9,11 @@ namespace HareAndTortoise
     public class HareController : MonoBehaviour
     {
         [SerializeField] private Transform goalPoint;
+        [SerializeField] private Transform sleepTree;
+        [SerializeField] private Transform sleepSpot;
 
         private NavMeshAgent agent;
+        private Transform prevPos;
         
         private void Awake()
         {
