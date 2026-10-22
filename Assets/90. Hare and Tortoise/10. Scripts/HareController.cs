@@ -19,12 +19,17 @@ namespace HareAndTortoise
         
         private void Update()
         {
-            if (SimpleInput.GetKeyDown(Key.Digit1)) MoveToGoal();
+            if (RaceManager.Instance.canStartHare == false)
+            {
+                agent.isStopped = true;
+                return;
+            }
+            MoveToGoal();
         }
 
         private void MoveToGoal()
         {
-            Debug.Log("토끼 출발!");
+            agent.isStopped = false;
             agent.SetDestination(goalPoint.position);
         }
     }

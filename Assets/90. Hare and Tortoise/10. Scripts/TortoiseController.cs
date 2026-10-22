@@ -1,6 +1,8 @@
 using Study.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
+using Cursor = UnityEngine.Cursor;
 
 namespace HareAndTortoise
 {
@@ -8,7 +10,6 @@ namespace HareAndTortoise
     {
         [Header("Settings")]   
         [SerializeField] private float moveSpeed = 3f;
-        [SerializeField] private float runSpeed = 7f;
         [SerializeField] private float horizontalSensitivity = 1.0f;
         [SerializeField] private float verticalSensitivity = 1.0f;
         [SerializeField] private float lockOnSensitivity = 0.1f;
@@ -63,6 +64,7 @@ namespace HareAndTortoise
         
         private void UpdatePosition()
         {
+            if (RaceManager.Instance.canStartTortoise == false) return;
             Vector2 inputAxis = SimpleInput.GetMoveAxisRaw();
             if (inputAxis.sqrMagnitude < 0.00001f) return;
             
@@ -75,10 +77,8 @@ namespace HareAndTortoise
             
             // inputVector를 yaw만큼 회전시킨 이동 벡터를 생성합니다.            
             Vector3 moveVector = (yaw * inputVector).normalized;
-            // 크기(속도)를 결정해 줍니다.
-            float speed = SimpleInput.GetKey(Key.LeftShift) ? runSpeed : moveSpeed;
             // 내가 이번 프레임에 이동해야할 월드 벡터가 나옵니다.
-            transform.position += moveVector * (speed * Time.deltaTime);
+            transform.position += moveVector * (moveSpeed * Time.deltaTime);
 
             // 몸과 루트의 회전적용합니다
             Quaternion targetRotation = Quaternion.LookRotation(moveVector);
