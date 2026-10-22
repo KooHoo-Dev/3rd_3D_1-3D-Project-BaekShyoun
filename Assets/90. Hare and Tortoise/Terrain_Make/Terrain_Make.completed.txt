@@ -1,0 +1,9 @@
+Completed: 2026-10-22T18:46:04.5685789+09:00
+Terrain size: (100.00, 600.00, 80.00)
+Source position: (-50.00, -0.51, -21.00)
+Road local bounds: Center: (0.00, 0.00, 0.00), Extents: (5.00, 0.00, 20.00)
+Protected margin: 8m plus heightmap halo
+Protected samples verified exactly: 58752
+Raised rim samples: 114557
+Original assets and existing scene objects were not modified.
+Terrain_Make is initially inactive to avoid overlapping terrains.

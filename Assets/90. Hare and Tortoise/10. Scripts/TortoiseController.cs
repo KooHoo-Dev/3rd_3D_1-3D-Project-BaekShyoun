@@ -8,6 +8,8 @@ namespace HareAndTortoise
 {
     public class TortoiseController : MonoBehaviour
     {
+        private static readonly int Speed = Animator.StringToHash("Speed");
+
         [Header("Settings")]   
         [SerializeField] private float moveSpeed = 3f;
         [SerializeField] private float horizontalSensitivity = 1.0f;
@@ -25,7 +27,15 @@ namespace HareAndTortoise
         // 입력 회전량들을 모아둘겁니다
         private float angleX = 0.0f;
         private float angleY = 0.0f;
+        
+        // 자식 객체 animator
+        private Animator animator;
 
+        private void Awake()
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+        
         private void Start()
         {
             LockCursor();
@@ -64,10 +74,12 @@ namespace HareAndTortoise
         
         private void UpdatePosition()
         {
+            animator.SetFloat(Speed, 0f);
             if (RaceManager.Instance.canStartTortoise == false) return;
             Vector2 inputAxis = SimpleInput.GetMoveAxisRaw();
             if (inputAxis.sqrMagnitude < 0.00001f) return;
-            
+
+            animator.SetFloat(Speed, moveSpeed);
             // inputAxis를 3차원 입력 벡터로 바꿔줍니다.
             Vector3 inputVector = new Vector3(inputAxis.x, 0f, inputAxis.y);
             
