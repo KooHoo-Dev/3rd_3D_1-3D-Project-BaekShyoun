@@ -1,7 +1,5 @@
 using Study.Utilities;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
 using Cursor = UnityEngine.Cursor;
 
 namespace HareAndTortoise

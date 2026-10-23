@@ -1,17 +1,14 @@
-using System;
 using System.Collections;
-using Study.Utilities;
-using UnityEditor.Analytics;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.InputSystem;
-using UnityPipeline.Microsoft.CodeAnalysis.FlowAnalysis;
 
 namespace HareAndTortoise
 {
     public class HareController : MonoBehaviour
     {
         private static readonly int Speed = Animator.StringToHash("Speed");
+        private static readonly int IsSleeping = Animator.StringToHash("IsSleeping");
+
         [Header("Goal Settings")]
         [SerializeField] private Transform goalPoint;
         
@@ -28,6 +25,7 @@ namespace HareAndTortoise
         {
             ToGoal,
             ToSleep,
+            Sleeping,
             Attacked,
             Returning,
         }
@@ -65,18 +63,20 @@ namespace HareAndTortoise
                 case HareState.ToSleep:
                     MoveToSleep();
                     break;
+                case HareState.Sleeping:
+                    break;
                 case HareState.Attacked:
                     break;
                 case HareState.Returning:
+                    ReturnToTrack();
                     break;
             }
         }
         
         private void MoveToGoal()
         {
-            state = HareState.ToGoal;
-            agent.speed = 3.5f;
-            animator.SetFloat(Speed, agent.speed);
+            Debug.Log("MoveToGoal Start");
+            SetHareMoving(3.5f);
             agent.SetDestination(goalPoint.position);
             // 원형 범위 검사
             Vector3 offset = transform.position - sleepTree.position;
@@ -96,22 +96,47 @@ namespace HareAndTortoise
             if (agent.pathPending) return;
             if (agent.remainingDistance <= agent.stoppingDistance)
             {
-                agent.speed = 0f;
-                animator.SetFloat(Speed, agent.speed);
+                SetHareMoving(0f);
+                state = HareState.Sleeping;
                 StartCoroutine(Sleep());
             }
         }
 
         private IEnumerator Sleep()
         {
-            yield return null;
+            animator.SetBool(IsSleeping, true);
+            yield return new WaitForSeconds(10f);
+            animator.SetBool(IsSleeping, false);
+            SetReturnStat();
         }
 
-        private void OnDrawGizmosSelected()
+        private void SetReturnStat()
+        {
+            SetHareMoving(3.5f);
+            state = HareState.Returning;
+        }
+
+        private void ReturnToTrack()
+        {
+            agent.SetDestination(prevPos);
+            if (agent.remainingDistance <= agent.stoppingDistance)
+            {
+                state = HareState.ToGoal;
+            }
+        }
+
+        private void OnDrawGizmos()
         {
             if (sleepTree == null) return;
             UnityEditor.Handles.color = Color.red;
             UnityEditor.Handles.DrawWireDisc(sleepTree.position, Vector3.up, sleepRadius);
+        }
+        
+        // 업무 단축 메서드
+        private void SetHareMoving(float speed)
+        {
+            agent.speed = speed;
+            animator.SetFloat(Speed, agent.speed);
         }
     }
 }
