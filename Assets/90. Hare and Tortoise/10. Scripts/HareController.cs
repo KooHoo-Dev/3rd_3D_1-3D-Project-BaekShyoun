@@ -20,6 +20,12 @@ namespace HareAndTortoise
         private bool hasSlept;
         private HareState state = HareState.ToGoal;
 
+        [Header("Knockback Settings")]
+        [SerializeField] private Transform knockbackDirection;
+        [SerializeField] private float horizontalImpulse = 8f; // 수평
+        [SerializeField] private float upwardImpulse = 5f; // 수직(+)
+        [SerializeField] private float attackedDuration = 10f;
+
 
         private enum HareState
         {
@@ -132,11 +138,65 @@ namespace HareAndTortoise
             UnityEditor.Handles.DrawWireDisc(sleepTree.position, Vector3.up, sleepRadius);
         }
         
-        // 업무 단축 메서드
+        // 애니메이션 단축 메서드
         private void SetHareMoving(float speed)
         {
             agent.speed = speed;
             animator.SetFloat(Speed, agent.speed);
+        }
+        
+        // 넉백 판정
+        [ContextMenu("Test Knockback")]
+        public void ApplyKnockback()
+        {
+            if (state == HareState.Sleeping || state == HareState.Attacked) return;
+            Rigidbody rBody = GetComponent<Rigidbody>();
+            
+            // 날아가기 직전 위치
+            prevPos = transform.position;
+            
+            SetHareMoving(0f);
+            state = HareState.Attacked;
+            
+            agent.enabled = false;
+            rBody.isKinematic = false;
+
+            Vector3 direction = knockbackDirection.forward;
+            direction.y = 0;
+            direction.Normalize();
+
+            Vector3 impulse = direction * horizontalImpulse + Vector3.up * upwardImpulse;
+            rBody.AddForce(impulse, ForceMode.Impulse);
+            animator.SetBool(IsSleeping, true);
+
+            StartCoroutine(RecoverFromKnockBack(rBody));
+        }
+
+        private IEnumerator RecoverFromKnockBack(Rigidbody rBody)
+        {
+            yield return new WaitForSeconds(attackedDuration);
+            animator.SetBool(IsSleeping, false);
+
+            // 물리 움직임이 멈출 때까지 대기
+            yield return new WaitUntil(() => rBody.IsSleeping());
+
+            if (!NavMesh.SamplePosition(
+                    transform.position,
+                    out NavMeshHit hit,
+                    3f,
+                    agent.areaMask))
+            {
+                Debug.LogWarning("토끼 주변에 복귀 가능한 NavMesh가 없습니다.");
+                yield break;
+            }
+
+            rBody.isKinematic = true;
+            transform.position = hit.position;
+
+            agent.enabled = true;
+            agent.Warp(hit.position);
+
+            SetReturnStat();
         }
     }
 }

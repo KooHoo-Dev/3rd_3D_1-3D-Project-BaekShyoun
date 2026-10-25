@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: e41662f1193b78a4fab86e930fd0bd0e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 380734
+  packageName: Fully functional grenade system - 5 Grenades ready to use!
+  packageVersion: 1.1
+  assetPath: Assets/Game Assets/Aegis77/Grenades Pack 1/High Explosive Grenade/Scripts/HiEx
+    Grenade.cs
+  uploadId: 938244

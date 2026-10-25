@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec418052b43a14941a0c723154b78899, type: 3}
+  m_Name: Flash_Data
+  m_EditorClassIdentifier: 
+  grenadeName: STUN
+  icon: {fileID: 21300000, guid: 2dd6dc89de5ad2b4da776e5a86dc3e04, type: 3}
+  prefab: {fileID: 3553524701502179269, guid: fc5e4fb052e41eb44ac142c49270db89, type: 3}
+  explosionDelay: 3
+  throwForce: 20
+  explosionForce: 1000
+  explosionRadius: 5
+  explosionEffectPrefab: {fileID: 4286065730283674056, guid: e6c99d073345c7541aad2be59e550ee5, type: 3}
+  effectOffset: {x: 0, y: 0.5, z: 0}
+  explosionEffectLifetime: 5
+  impactSound: {fileID: 8300000, guid: f119bbe2a0397e24c83918df870f7b83, type: 3}
+  explosionSounds:
+  - {fileID: 8300000, guid: 548b844b0cce67c45bb17b715a4099ae, type: 3}
+  - {fileID: 8300000, guid: d3a31ad946aa5704bb806f1170be280a, type: 3}
+  - {fileID: 8300000, guid: 7adf1bf20525dca4bab640dfabe71a96, type: 3}
+  audioSourcePrefab: {fileID: 538503049481493739, guid: 2c9feedab9067494a92f0f98aa2fb794, type: 3}
+  closeRadius: 1
+  nearRadius: 5
+  farRadius: 7
+  closeDam: 0
+  nearDam: 0
+  farDam: 0
+  shrapnelCount: 40
+  shrapnelRange: 15
+  shrapnelDamage: 10
+  sparkEffectPrefab: {fileID: 0}
+  sparkLifetime: 3
+  flashDuration: 2.5
+  maxFlashAlpha: 1
+  fireDuration: 10
+  damageInterval: 1
+  fireDamagePerTick: 5
+  smokeDuration: 50

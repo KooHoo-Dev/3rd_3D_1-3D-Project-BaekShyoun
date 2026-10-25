@@ -1,5 +1,6 @@
 using Study.Utilities;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Cursor = UnityEngine.Cursor;
 
 namespace HareAndTortoise
@@ -8,7 +9,7 @@ namespace HareAndTortoise
     {
         private static readonly int Speed = Animator.StringToHash("Speed");
 
-        [Header("Settings")]   
+        [Header("Move Settings")]   
         [SerializeField] private float moveSpeed = 3f;
         [SerializeField] private float horizontalSensitivity = 1.0f;
         [SerializeField] private float verticalSensitivity = 1.0f;
@@ -16,6 +17,23 @@ namespace HareAndTortoise
         
         [SerializeField] private float pitchAngleMin;
         [SerializeField] private float pitchAngleMax;
+
+        [Header("Grenade Settings")] 
+        [SerializeField] private GameObject grenadePrefab;
+        [SerializeField] private Transform grenadeHoldPoint;
+        [SerializeField] private float throwSpeed = 12f;
+        [SerializeField] private float throwUpwardSpeed = 5f;
+        private GameObject heldGrenade;
+        
+        [Header("Trajectory Settings")]
+        [SerializeField] private LineRenderer trajectoryLine;
+        [SerializeField] private int trajectoryPointCount = 60;
+        [SerializeField] private float trajectoryTimeStep = 0.1f;
+        
+        [Header("Landing Circle Settings")]
+        [SerializeField] private LineRenderer landingCircle;
+        [SerializeField] private float landingCircleRadius = 0.5f;
+        [SerializeField] private int landingCirclePointCount = 40;
         
         [Header("Ref")]
         [SerializeField] private Transform cameraPivot;
@@ -45,18 +63,13 @@ namespace HareAndTortoise
             UpdateAngle();
 
             // 조준 및 발사
-            if (SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right))
-            {
-                if (SimpleInput.GetMouseButtonDown(SimpleInput.MouseButton.Left))
-                {
-                    Debug.Log("발사");
-                }
-            }
+            AimGrenade();
         }
 
         private void LateUpdate()
         {
             UpdateCameraRotation();
+            DrawTrajectory();
         }
 
         private void UpdateAngle()
@@ -112,6 +125,141 @@ namespace HareAndTortoise
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
         }
+
+        # region 수류탄 로직
+        
+        // 수류탄 조준
+        private void AimGrenade()
+        {
+            if (RaceManager.Instance.canStartTortoise == false) return;
+            if (SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right) == false) return;
+            if (SimpleInput.GetKeyDown(Key.F))
+            {
+                if (heldGrenade == null)
+                {
+                    heldGrenade = Instantiate(grenadePrefab, grenadeHoldPoint, false);
+
+                    heldGrenade.transform.localPosition = Vector3.zero;
+                    heldGrenade.transform.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    Destroy(heldGrenade);
+                    heldGrenade = null;
+                }
+            }
+
+            if (heldGrenade != null && SimpleInput.GetMouseButtonDown(SimpleInput.MouseButton.Left))
+            {
+                ThrowGrenade();
+            }
+        }
+        
+        // 수류탄 발사
+        private void ThrowGrenade()
+        {
+            if (heldGrenade == null) return;
+            GameObject grenade = heldGrenade;
+            heldGrenade = null;
+
+            grenade.transform.SetParent(null, true);
+            
+            Rigidbody rBody = grenade.GetComponent<Rigidbody>();
+
+            rBody.isKinematic = false;
+
+            foreach (Collider col in grenade.GetComponentsInChildren<Collider>())
+            {
+                col.enabled = true;
+            }
+
+            Vector3 direction = Quaternion.Euler(angleX, angleY, 0f) * Vector3.forward;
+            Vector3 velocity = direction * throwSpeed + Vector3.up * throwUpwardSpeed;
+            rBody.AddForce(velocity, ForceMode.VelocityChange);
+        }
+        
+        # endregion
+        
+        # region 포물선 그리기
+        private void DrawTrajectory()
+        {
+            landingCircle.positionCount = 0;
+            bool isAiming =
+                SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right);
+
+            if (RaceManager.Instance.canStartTortoise == false || isAiming == false || heldGrenade == null)
+            {
+                trajectoryLine.positionCount = 0;
+                return;
+            }
+
+            Vector3 startPosition = heldGrenade.transform.position;
+
+            Vector3 direction =
+                Quaternion.Euler(angleX, angleY, 0f) * Vector3.forward;
+
+            Vector3 velocity =
+                direction * throwSpeed + Vector3.up * throwUpwardSpeed;
+
+            trajectoryLine.positionCount = trajectoryPointCount;
+            trajectoryLine.SetPosition(0, startPosition);
+
+            Vector3 previousPoint = startPosition;
+
+            for (int i = 1; i < trajectoryPointCount; i++)
+            {
+                float time = i * trajectoryTimeStep;
+
+                Vector3 point =
+                    startPosition +
+                    velocity * time +
+                    Physics.gravity * (0.5f * time * time);
+
+                // 이전 점과 현재 점 사이에 바닥이 있으면 선을 끝내기
+                Vector3 segment = point - previousPoint;
+
+                if (Physics.Raycast(
+                        previousPoint,
+                        segment.normalized,
+                        out RaycastHit hit,
+                        segment.magnitude,
+                        LayerMask.GetMask("Ground"),
+                        QueryTriggerInteraction.Ignore))
+                {
+                    trajectoryLine.SetPosition(i, hit.point);
+                    trajectoryLine.positionCount = i + 1;
+                    
+                    DrawLandingCircle(hit.point);
+                    break;
+                }
+
+                trajectoryLine.SetPosition(i, point);
+                previousPoint = point;
+            }
+        }
+        
+        private void DrawLandingCircle(Vector3 center)
+        {
+            landingCircle.positionCount = landingCirclePointCount;
+
+            for (int i = 0; i < landingCirclePointCount; i++)
+            {
+                float angle = i * Mathf.PI * 2f / landingCirclePointCount;
+
+                Vector3 offset = new Vector3(
+                    Mathf.Cos(angle),
+                    0f,
+                    Mathf.Sin(angle)) * landingCircleRadius;
+
+                // 바닥과 겹쳐 깜빡이지 않도록 조금 위에 표시
+                Vector3 point = center + offset + Vector3.up * 0.03f;
+
+                landingCircle.SetPosition(i, point);
+            }
+        }
+        # endregion
+        
+        
     }
 }
 
