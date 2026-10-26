@@ -161,12 +161,9 @@ namespace HareAndTortoise
             agent.enabled = false;
             rBody.isKinematic = false;
 
-            // 날아가는 방향 랜덤 설정
-            Vector3[] directions =
-                { knockbackDirection.forward, knockbackDirection.right, -knockbackDirection.forward };
-            int randNum = Random.Range(0, directions.Length - 1);
-            Debug.Log($"방향 : {randNum} >> (거북이 기준) 오른쪽 : 0, 뒷쪽 : 1, 왼쪽 : 2");
-            Vector3 direction = directions[randNum];
+            // 날아가는 방향 랜덤 설정 - 추후 시간이 남으면 폭발 지점과 현 위치에 맞는 방향으로 날아가게 수정
+            float randomAngle = Random.Range(-135f, 135f);
+            Vector3 direction = Quaternion.Euler(0f, randomAngle, 0f) * (-transform.forward);
             direction.y = 0;
             direction.Normalize();
 
