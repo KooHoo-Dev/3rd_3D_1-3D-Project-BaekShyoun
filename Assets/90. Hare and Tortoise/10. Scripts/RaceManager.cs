@@ -4,6 +4,8 @@ using Study.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using TMPro;
+using UnityEditor.Searcher;
 
 namespace HareAndTortoise
 {
@@ -11,6 +13,9 @@ namespace HareAndTortoise
     {
         public bool canStartTortoise;
         public bool canStartHare;
+        
+        [Header("UI Settings")]
+        [SerializeField] private TMP_Text raceText;
         
         // 승리 결정
         private bool canDecideWinner = false;
@@ -21,6 +26,7 @@ namespace HareAndTortoise
             if (other.CompareTag("Tortoise"))
             {
                 Debug.Log($"거북이 승리!");
+                TextManager.SetMessage(raceText, true, "Tortoise Win!\nTry Next Stage( Y / N )");
                 canStartHare = false;
                 canDecideWinner = true;
                 winnerName = "거북이";
@@ -28,6 +34,7 @@ namespace HareAndTortoise
             if (other.CompareTag("Hare"))
             {
                 Debug.Log($"토끼 승리!");
+                TextManager.SetMessage(raceText, true, "Hare Win!\nTry Again( Y / N )");
                 canStartTortoise = false;
                 canDecideWinner = true;
                 winnerName = "토끼";
@@ -38,6 +45,8 @@ namespace HareAndTortoise
         {
             canStartTortoise = false;
             canStartHare = false;
+            Debug.Log("Press Enter To Start Race");
+            TextManager.SetMessage(raceText, true, "Press Enter To Start Race");
             StartCoroutine(StartCountDown());
         }
 
@@ -69,17 +78,20 @@ namespace HareAndTortoise
         
         private IEnumerator StartCountDown()
         {
-            Debug.Log("Press Enter To Start Race");
             yield return new WaitUntil(() => SimpleInput.GetKeyDown(Key.Enter));
             for (int i = 3; i > 0; i--)
             {
                 Debug.Log(i);
+                TextManager.SetMessage(raceText, true, $"{i}");
                 yield return new WaitForSeconds(1f);
             }
 
             canStartTortoise = true;
             canStartHare = true;
             Debug.Log("Race Start!");
+            TextManager.SetMessage(raceText, true, "Start!");
+            yield return new WaitForSeconds(1f);
+            TextManager.SetMessage(raceText, false);
         }
     }
 }

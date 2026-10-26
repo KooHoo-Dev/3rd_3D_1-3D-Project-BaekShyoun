@@ -161,7 +161,12 @@ namespace HareAndTortoise
             agent.enabled = false;
             rBody.isKinematic = false;
 
-            Vector3 direction = knockbackDirection.forward;
+            // 날아가는 방향 랜덤 설정
+            Vector3[] directions =
+                { knockbackDirection.forward, knockbackDirection.right, -knockbackDirection.forward };
+            int randNum = Random.Range(0, directions.Length - 1);
+            Debug.Log($"방향 : {randNum} >> (거북이 기준) 오른쪽 : 0, 뒷쪽 : 1, 왼쪽 : 2");
+            Vector3 direction = directions[randNum];
             direction.y = 0;
             direction.Normalize();
 
