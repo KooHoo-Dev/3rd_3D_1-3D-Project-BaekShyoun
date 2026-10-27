@@ -1,11 +1,13 @@
 using System.Collections;
+using System.Threading;
+using System.Transactions;
 using Jay;
 using Study.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using TMPro;
-using UnityEditor.Searcher;
+using Cysharp.Threading.Tasks;
 
 namespace HareAndTortoise
 {
@@ -13,6 +15,11 @@ namespace HareAndTortoise
     {
         public bool canStartTortoise;
         public bool canStartHare;
+
+        [Header("Prepare Settings")]
+        [SerializeField] private float prepareDuration = 60f;
+        private bool isRequestToStart;
+        private CancellationToken destroyToken;
         
         [Header("UI Settings")]
         [SerializeField] private TMP_Text raceText;
@@ -20,6 +27,7 @@ namespace HareAndTortoise
         // 승리 결정
         private bool canDecideWinner = false;
         private string winnerName;
+
         
         private void OnTriggerEnter(Collider other)
         {
@@ -41,17 +49,26 @@ namespace HareAndTortoise
             }
         }
 
+        protected override void Awake()
+        {
+            base.Awake();
+            destroyToken = this.GetCancellationTokenOnDestroy();
+        }
+        
         private void Start()
         {
             canStartTortoise = false;
             canStartHare = false;
             Debug.Log("Press Enter To Start Race");
             TextManager.SetMessage(raceText, true, "Press Enter To Start Race");
-            StartCoroutine(StartCountDown());
+            StartCountDown();
         }
 
         private void Update()
         {
+            if(SimpleInput.GetKeyDown(Key.Enter)) RequestToStart();
+            
+            
             // 아래는 약간 임시 코드. 추후 UI 연결하면서 제대로 다룰 것
             // + 추후 현재 씬 넘버 고려해서 넘길 수도 있어야 함
             if (canDecideWinner)
@@ -76,21 +93,27 @@ namespace HareAndTortoise
             if (SimpleInput.GetKeyDown(Key.Digit1)) SceneManager.LoadScene(1);
         }
         
-        private IEnumerator StartCountDown()
+        public void RequestToStart()
         {
-            yield return new WaitUntil(() => SimpleInput.GetKeyDown(Key.Enter));
-            for (int i = 3; i > 0; i--)
+            isRequestToStart = true;
+        }
+        
+        private async UniTaskVoid StartCountDown()
+        {
+            float remainTime = prepareDuration;
+            while (remainTime > 0f && isRequestToStart == false)
             {
-                Debug.Log(i);
-                TextManager.SetMessage(raceText, true, $"{i}");
-                yield return new WaitForSeconds(1f);
+                TextManager.SetMessage(raceText, true, 
+                    $"GetReady : {remainTime:F0}seconds \n Enter To Start Now");
+                await UniTask.Yield(cancellationToken: destroyToken);
+                remainTime -= Time.deltaTime;
             }
 
             canStartTortoise = true;
             canStartHare = true;
             Debug.Log("Race Start!");
             TextManager.SetMessage(raceText, true, "Start!");
-            yield return new WaitForSeconds(1f);
+            await UniTask.WaitForSeconds(1f, cancellationToken: destroyToken);
             TextManager.SetMessage(raceText, false);
         }
     }

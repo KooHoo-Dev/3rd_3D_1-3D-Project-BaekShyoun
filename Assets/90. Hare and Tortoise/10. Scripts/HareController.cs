@@ -1,6 +1,7 @@
-using System.Collections;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.AI;
+using Cysharp.Threading.Tasks;
 
 namespace HareAndTortoise
 {
@@ -9,6 +10,8 @@ namespace HareAndTortoise
         private static readonly int Speed = Animator.StringToHash("Speed");
         private static readonly int IsSleeping = Animator.StringToHash("IsSleeping");
 
+        private CancellationToken destroyToken;
+        
         [Header("Goal Settings")]
         [SerializeField] private Transform goalPoint;
         
@@ -42,6 +45,7 @@ namespace HareAndTortoise
         
         private void Awake()
         {
+            destroyToken = this.GetCancellationTokenOnDestroy();
             agent = GetComponent<NavMeshAgent>();
             animator = GetComponent<Animator>();
             hasSlept = false;
@@ -104,14 +108,14 @@ namespace HareAndTortoise
             {
                 SetHareMoving(0f);
                 state = HareState.Sleeping;
-                StartCoroutine(Sleep());
+                Sleep();
             }
         }
 
-        private IEnumerator Sleep()
+        private async UniTaskVoid Sleep()
         {
             animator.SetBool(IsSleeping, true);
-            yield return new WaitForSeconds(10f);
+            await UniTask.WaitForSeconds(10f, cancellationToken: destroyToken);
             animator.SetBool(IsSleeping, false);
             SetReturnStat();
         }
@@ -171,21 +175,21 @@ namespace HareAndTortoise
             rBody.AddForce(impulse, ForceMode.Impulse);
             animator.SetBool(IsSleeping, true);
 
-            StartCoroutine(RecoverFromKnockBack(rBody));
+            RecoverFromKnockBack(rBody);
         }
 
-        private IEnumerator RecoverFromKnockBack(Rigidbody rBody)
+        private async UniTaskVoid RecoverFromKnockBack(Rigidbody rBody)
         {
-            yield return new WaitForSeconds(attackedDuration);
+            await UniTask.WaitForSeconds(attackedDuration, cancellationToken: destroyToken);
             animator.SetBool(IsSleeping, false);
 
             // 물리 움직임이 멈출 때까지 대기
-            yield return new WaitUntil(() => rBody.IsSleeping());
+            await UniTask.WaitUntil(() => rBody.IsSleeping(), cancellationToken: destroyToken);
 
             if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 3f, agent.areaMask) == false)
             {
                 Debug.LogWarning("토끼 주변에 복귀 가능한 NavMesh가 없습니다.");
-                yield break;
+                return;
             }
 
             rBody.isKinematic = true;
