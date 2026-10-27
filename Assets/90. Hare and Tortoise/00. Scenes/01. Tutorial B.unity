@@ -758,7 +758,7 @@ Transform:
   m_GameObject: {fileID: 798075243}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2, y: 0, z: 0}
+  m_LocalPosition: {x: -1.5, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -799,7 +799,7 @@ MonoBehaviour:
   landingCirclePointCount: 40
   cameraPivot: {fileID: 12015016}
   cameraTransform: {fileID: 17314235}
-  distance: 4
+  distance: 2
 --- !u!1 &903254030
 GameObject:
   m_ObjectHideFlags: 0
@@ -1902,8 +1902,8 @@ Transform:
   m_GameObject: {fileID: 919132148151102464}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2, y: -0.5099985, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalPosition: {x: 1.5, y: -0.5099985, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 5223916802315278779}
@@ -1920,7 +1920,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5100013, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7267760007924878653}
