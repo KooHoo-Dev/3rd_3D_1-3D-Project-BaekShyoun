@@ -1,18 +1,18 @@
-using System.Collections;
 using System.Threading;
-using System.Transactions;
-using Jay;
 using Study.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using TMPro;
 using Cysharp.Threading.Tasks;
+using Unity.Cinemachine;
 
 namespace HareAndTortoise
 {
-    public class RaceManager : SingletonBase<RaceManager>
+    public class RaceManager : MonoBehaviour
     {
+        public static RaceManager Instance { get; private set; }
+        
         public bool canStartTortoise;
         public bool canStartHare;
 
@@ -23,6 +23,10 @@ namespace HareAndTortoise
         
         [Header("UI Settings")]
         [SerializeField] private TMP_Text raceText;
+
+        [Header("Cameras")]
+        [SerializeField] private CinemachineCamera[] cameras;
+        [SerializeField] private CinemachineBrain mainCam;
         
         // 승리 결정
         private bool canDecideWinner = false;
@@ -49,18 +53,27 @@ namespace HareAndTortoise
             }
         }
 
-        protected override void Awake()
+        private void Awake()
         {
-            base.Awake();
+            Instance = this;
             destroyToken = this.GetCancellationTokenOnDestroy();
         }
-        
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
+
         private void Start()
         {
             canStartTortoise = false;
             canStartHare = false;
             Debug.Log("Press Enter To Start Race");
             TextManager.SetMessage(raceText, true, "Press Enter To Start Race");
+            SelectCamera(0);
             StartCountDown();
         }
 
@@ -108,6 +121,9 @@ namespace HareAndTortoise
                 await UniTask.Yield(cancellationToken: destroyToken);
                 remainTime -= Time.deltaTime;
             }
+            SelectCamera(1);
+            await UniTask.NextFrame(cancellationToken: destroyToken);
+            await UniTask.WaitUntil(() => mainCam.IsBlending == false, cancellationToken: destroyToken);
 
             canStartTortoise = true;
             canStartHare = true;
@@ -115,6 +131,15 @@ namespace HareAndTortoise
             TextManager.SetMessage(raceText, true, "Start!");
             await UniTask.WaitForSeconds(1f, cancellationToken: destroyToken);
             TextManager.SetMessage(raceText, false);
+        }
+
+        private void SelectCamera(int index)
+        {
+            if (index < 0 || index >= cameras.Length) return;
+            for (int i = 0; i < cameras.Length; i++)
+            {
+                cameras[i].Priority = (i == index) ? 20 : 10;
+            }
         }
     }
 }
