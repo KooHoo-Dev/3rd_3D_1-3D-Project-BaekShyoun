@@ -182,11 +182,7 @@ namespace HareAndTortoise
             // 물리 움직임이 멈출 때까지 대기
             yield return new WaitUntil(() => rBody.IsSleeping());
 
-            if (!NavMesh.SamplePosition(
-                    transform.position,
-                    out NavMeshHit hit,
-                    3f,
-                    agent.areaMask))
+            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 3f, agent.areaMask) == false)
             {
                 Debug.LogWarning("토끼 주변에 복귀 가능한 NavMesh가 없습니다.");
                 yield break;

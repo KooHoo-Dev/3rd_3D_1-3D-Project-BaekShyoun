@@ -1398,7 +1398,7 @@ Transform:
   m_GameObject: {fileID: 1958293003}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.292, y: 0, z: 0.535}
+  m_LocalPosition: {x: 0.292, y: 1.383, z: 0.535}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2053,7 +2053,7 @@ NavMeshAgent:
   m_AutoBraking: 1
   m_AutoRepath: 1
   m_Height: 2
-  m_BaseOffset: -0.12
+  m_BaseOffset: -0.05
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
 --- !u!54 &919132148151102466
@@ -2112,7 +2112,7 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 919132148151102464}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
+  m_Avatar: {fileID: 9000000, guid: a59c28e5fec0de04a92fbb6836ab17cf, type: 3}
   m_Controller: {fileID: 9100000, guid: 6d93b8e9703a2a8479d0ad500072654b, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
@@ -2136,6 +2136,7 @@ GameObject:
   - component: {fileID: 543450653476883316}
   - component: {fileID: 265088161}
   - component: {fileID: 919132149284721103}
+  - component: {fileID: 919132149284721104}
   m_Layer: 0
   m_Name: Tortoise
   m_TagString: Untagged
@@ -2152,7 +2153,7 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 919132149284721102}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
+  m_Avatar: {fileID: 9000000, guid: 2b60a12de290fd14d885a3953ea49fc0, type: 3}
   m_Controller: {fileID: 9100000, guid: 796facdd40ec17f45aaa2190e5c44f92, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
@@ -2165,6 +2166,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &919132149284721104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132149284721102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 523e6d075094bd64ebca3478352dff4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TortoiseGrip
+  leftHand: {fileID: 3776326563469697397}
+  rightHand: {fileID: 4266128007855181307}
+  leftGrip: 50
+  rightGrip: 50
 --- !u!1 &984635235076745323
 GameObject:
   m_ObjectHideFlags: 0
@@ -3512,7 +3529,7 @@ SkinnedMeshRenderer:
   - {fileID: 731474144534641346}
   m_BlendShapeWeights:
   - 0
-  - 0
+  - 100
   - 0
   - 0
   m_RootBone: {fileID: 8585747791119140353}
@@ -3872,7 +3889,7 @@ SkinnedMeshRenderer:
   - {fileID: 731474144534641346}
   m_BlendShapeWeights:
   - 0
-  - 0
+  - 100
   - 0
   - 0
   m_RootBone: {fileID: 8585747791119140353}
