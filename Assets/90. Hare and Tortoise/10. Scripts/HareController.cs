@@ -129,10 +129,12 @@ namespace HareAndTortoise
         private void ReturnToTrack()
         {
             agent.SetDestination(prevPos);
-            if (agent.remainingDistance <= agent.stoppingDistance)
-            {
-                state = HareState.ToGoal;
-            }
+
+            if (agent.pathPending) return;
+
+            if (Vector3.Distance(transform.position, prevPos) > 0.2f) return;
+            
+            state = HareState.ToGoal;
         }
 
         private void OnDrawGizmos()
@@ -157,7 +159,8 @@ namespace HareAndTortoise
             Rigidbody rBody = GetComponent<Rigidbody>();
             
             // 날아가기 직전 위치
-            prevPos = transform.position;
+            if(state==HareState.ToGoal)
+                prevPos = transform.position;
             
             SetHareMoving(0f);
             state = HareState.Attacked;

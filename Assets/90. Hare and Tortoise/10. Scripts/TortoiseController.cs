@@ -51,14 +51,10 @@ namespace HareAndTortoise
         {
             animator = GetComponentInChildren<Animator>();
         }
-        
-        private void Start()
-        {
-            LockCursor();
-        }
 
         private void Update()
         {
+            LockCursor();
             UpdatePosition();
             UpdateAngle();
 
@@ -74,6 +70,7 @@ namespace HareAndTortoise
 
         private void UpdateAngle()
         {
+            if (RaceManager.Instance.canStartTortoise == false) return;
             Vector2 delta = SimpleInput.GetMouseDelta();
             // 우클릭 시(락온 시) 감도 떨구기
             angleX -= SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right)
@@ -110,6 +107,7 @@ namespace HareAndTortoise
 
         private void UpdateCameraRotation()
         {
+            if (RaceManager.Instance.canStartTortoise == false) return;
             // 우클릭 시(락온 시) 카메라 거리 가깝게
             float targetDistance =
                 SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right) ? 2f : 4f;
@@ -122,8 +120,9 @@ namespace HareAndTortoise
         
         private void LockCursor()
         {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
+            bool isPreparing = RaceManager.Instance.IsPreParing;
+            Cursor.visible = isPreparing;
+            Cursor.lockState = isPreparing? CursorLockMode.None : CursorLockMode.Locked;
         }
 
         # region 수류탄 로직
@@ -258,7 +257,6 @@ namespace HareAndTortoise
             }
         }
         # endregion
-        
         
     }
 }

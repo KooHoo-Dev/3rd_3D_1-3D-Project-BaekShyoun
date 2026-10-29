@@ -1158,7 +1158,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HareAndTortoise.PrepCameraController
   zoomSpeed: 1
-  moveSpeed: 1
+  moveSpeed: 0.1
+  minSize: 1
+  maxSize: 60
+  terrain: {fileID: 990000003}
+  landminePrefab: {fileID: 6666970248652088232, guid: 8ebf8f8bd7ddcad40b5bb4f0e0f5b089, type: 3}
 --- !u!136 &1279070547
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1174,7 +1178,7 @@ CapsuleCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -1402,8 +1406,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bee7f5dc8f6e73942a956f47861b34ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HareAndTortoise.RaceManager
-  canStartTortoise: 0
-  canStartHare: 0
   prepareDuration: 60
   raceText: {fileID: 1459447320}
   cameras:

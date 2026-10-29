@@ -13,8 +13,10 @@ namespace HareAndTortoise
     {
         public static RaceManager Instance { get; private set; }
         
-        public bool canStartTortoise;
-        public bool canStartHare;
+        public bool canStartTortoise { get; private set; }
+        public bool canStartHare { get; private set; }
+
+        public bool IsPreParing { get; private set; } = true;
 
         [Header("Prepare Settings")]
         [SerializeField] private float prepareDuration = 60f;
@@ -121,6 +123,9 @@ namespace HareAndTortoise
                 await UniTask.Yield(cancellationToken: destroyToken);
                 remainTime -= Time.deltaTime;
             }
+
+            IsPreParing = false;
+            
             SelectCamera(1);
             await UniTask.NextFrame(cancellationToken: destroyToken);
             await UniTask.WaitUntil(() => mainCam.IsBlending == false, cancellationToken: destroyToken);
