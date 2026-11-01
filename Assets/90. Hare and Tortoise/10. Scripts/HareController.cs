@@ -17,8 +17,11 @@ namespace HareAndTortoise
         [Header("Goal Settings")]
         [SerializeField] private Transform goalPoint; // 토끼의 목표 지점
 
+        [Header("Stage1 Route Settings")] [SerializeField]
+        private Transform inlineWaypoints; // 인라인 경유지점
+        private int waypointIndex; // 앞으로 향할 경유지점 번호
+
         [Header("Sleep Settings")]
-        [SerializeField] private bool canSleep = true;
         [SerializeField] private Transform sleepTree; // 토끼가 수면을 취할 나무 위치
         [SerializeField] private Transform sleepSpot; // 토끼가 실제로 잠드는 위치
         [SerializeField] private float sleepRadius = 3f; // 토끼가 자러 가기 위한 나무 중심의 반경
@@ -167,6 +170,18 @@ namespace HareAndTortoise
         }
         
         # endregion
+        
+        # region stage 전용 메서드
+
+        public void PlaceAtSpawn(Transform spawnPoint)
+        {
+            if (NavMesh.SamplePosition(spawnPoint.position, out NavMeshHit hit, 1f, agent.areaMask) == false)
+                return;
+            if (agent.Warp(hit.position) == false) return;
+            transform.rotation = spawnPoint.rotation;
+        }
+        
+        # endregion
 
         private void CheckState()
         {
@@ -193,7 +208,8 @@ namespace HareAndTortoise
             Debug.Log("MoveToGoal Start");
             SetHareMoving(3.5f);
             agent.SetDestination(goalPoint.position);
-            if (canSleep == false) return;
+            
+            if (RaceManager.Instance.CanSleep == false) return;
             // 원형 범위 검사
             Vector3 offset = transform.position - sleepTree.position;
             offset.y = 0;
@@ -260,6 +276,7 @@ namespace HareAndTortoise
         // 넉백 판정
         public void ApplyKnockback(Vector3 explosionPosition)
         {
+            if (RaceManager.Instance.CanAttack == false) return;
             if (state == HareState.Sleeping || state == HareState.Attacked) return;
             Rigidbody rBody = GetComponent<Rigidbody>();
             

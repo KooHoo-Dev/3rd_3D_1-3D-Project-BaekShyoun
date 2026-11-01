@@ -1,0 +1,4 @@
+Position: (-15.13, 2.50, -27.49); rotation: (0.00, 0.00, 0.00); scale: (12.00, 5.00, 0.00)
+After position: (-14.9999, 2.5000, -28.0215); rotation: (0.000, 285.276, 0.000); scale: (7.900, 5.000, 0.450)
+Trigger dimensions: 7.900001 x 5 x 0.45 m; isTrigger=True; collider enabled=True
+RaceManager and BoxCollider serialized properties unchanged. Source prefab untouched. Scene saved.

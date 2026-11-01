@@ -13,6 +13,7 @@ namespace HareAndTortoise
 
         private void OnTriggerEnter(Collider other)
         {
+            if (RaceManager.Instance.CanAttack == false) return;
             if (hasExploded) return;
 
             HareController hare = other.GetComponent<HareController>();

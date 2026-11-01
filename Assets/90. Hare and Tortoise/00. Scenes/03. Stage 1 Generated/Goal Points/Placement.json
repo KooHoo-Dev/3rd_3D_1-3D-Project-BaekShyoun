@@ -1,0 +1,20 @@
+[
+  {
+    "name": "GoalPoint_Inline",
+    "position": {
+      "x": -10.969755303488904,
+      "y": 0.01,
+      "z": -26.918400582276185
+    },
+    "distanceAlongGuide": 3.6
+  },
+  {
+    "name": "GoalPoint_Outline",
+    "position": {
+      "x": -12.025413399844716,
+      "y": 0.01,
+      "z": -30.785041956514164
+    },
+    "distanceAlongGuide": 3.6
+  }
+]

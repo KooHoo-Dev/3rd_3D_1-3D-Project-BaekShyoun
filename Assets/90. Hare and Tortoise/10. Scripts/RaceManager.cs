@@ -26,7 +26,12 @@ namespace HareAndTortoise
         public bool CanSleep { get; private set; } = true;
         public bool CanAttack { get; private set; } = true;
         public bool HasPreparation { get; private set; } = true;
-        
+
+        [Header("Stage1 Spawn Settings")]
+        [SerializeField] private Transform hareTransform;
+        [SerializeField] private Transform tortoiseTransform;
+        [SerializeField] private Transform hareSpawnPoint;
+        [SerializeField] private Transform tortoiseSpawnPoint;
         
         public bool canStartTortoise { get; private set; }
         public bool canStartHare { get; private set; }
@@ -76,7 +81,7 @@ namespace HareAndTortoise
         {
             Instance = this;
             destroyToken = this.GetCancellationTokenOnDestroy();
-            
+            CheckStage();
         }
 
         private void OnDestroy()
@@ -91,10 +96,22 @@ namespace HareAndTortoise
         {
             canStartTortoise = false;
             canStartHare = false;
-            Debug.Log("Press Enter To Start Race");
+
+            if (stageType == StageType.Stage1)
+            {
+                hareTransform.GetComponent<HareController>().PlaceAtSpawn(hareSpawnPoint);
+                tortoiseTransform.GetComponent<TortoiseController>().PlaceAtSpawn(tortoiseSpawnPoint);
+            }
+            
             TextManager.SetMessage(raceText, true, "Press Enter To Start Race");
-            SelectCamera(0);
-            StartCountDown();
+            
+            IsPreParing = HasPreparation;
+            if (HasPreparation)
+            {
+                SelectCamera(0);
+                StartCountDown();
+            }
+            else SelectCamera(1);
         }
 
         private void Update()
@@ -109,7 +126,7 @@ namespace HareAndTortoise
                 if (winnerName == "거북이")
                 {
                     Debug.Log("다음 스테이지로 이동하시겠습니까? ( Y / N )");
-                    if (SimpleInput.GetKeyDown(Key.Y)) SceneManager.LoadScene(1);
+                    if (SimpleInput.GetKeyDown(Key.Y)) LoadStage();
                     if (SimpleInput.GetKeyDown(Key.N)) Debug.Log("게임을 종료합니다.-> 편의상 진짜 종료는 아님");
                 }
 
@@ -141,17 +158,40 @@ namespace HareAndTortoise
                     CanAttack = false;
                     HasPreparation = false;
                     break;
-                case StageType.TutorialC:
-                    CanSleep = true;
+                case StageType.TutorialC or StageType.Stage1:
+                    CanSleep = false;
                     CanAttack = true;
                     HasPreparation = true;
                     break;
             }
         }
-        
-        public void RequestToStart()
+
+        private void LoadStage()
         {
+            switch (stageType)
+            {
+                case StageType.TutorialA:
+                    SceneManager.LoadScene("01. Tutorial B");
+                    break;
+                case StageType.TutorialB:
+                    SceneManager.LoadScene("02. Tutorial C");
+                    break;
+                case StageType.TutorialC:
+                    TextManager.SetMessage(raceText, true, "Gonna be soon");
+                    break;
+            }
+        }
+        
+        private void RequestToStart()
+        {
+            if (isRequestToStart || canDecideWinner) return;
+            
             isRequestToStart = true;
+            if (HasPreparation) return;
+
+            canStartTortoise = true;
+            canStartHare = true;
+            TextManager.SetMessage(raceText, false);
         }
         
         private async UniTaskVoid StartCountDown()

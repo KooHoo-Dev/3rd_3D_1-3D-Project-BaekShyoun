@@ -20,6 +20,7 @@ namespace HareAndTortoise
 
         private void Explode()
         {
+            if (RaceManager.Instance.CanAttack == false) return;
             hasExploded = true;
             Collider[] hits = Physics.OverlapSphere(transform.position, explosionRadius);
             

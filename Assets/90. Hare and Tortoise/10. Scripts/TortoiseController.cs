@@ -67,6 +67,17 @@ namespace HareAndTortoise
             UpdateCameraRotation();
             DrawTrajectory();
         }
+        
+        # region Stage1 전용 메서드
+
+        public void PlaceAtSpawn(Transform spawnPoint)
+        {
+            transform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
+            angleY=spawnPoint.eulerAngles.y;
+            cameraPivot.rotation = Quaternion.Euler(angleX, angleY, 0f);
+        }
+        
+        # endregion
 
         private void UpdateAngle()
         {
@@ -130,6 +141,7 @@ namespace HareAndTortoise
         // 수류탄 조준
         private void AimGrenade()
         {
+            if (RaceManager.Instance.CanAttack == false) return;
             if (RaceManager.Instance.canStartTortoise == false) return;
             if (SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right) == false) return;
             if (SimpleInput.GetKeyDown(Key.F))
@@ -182,6 +194,7 @@ namespace HareAndTortoise
         # region 포물선 그리기
         private void DrawTrajectory()
         {
+            if (RaceManager.Instance.CanAttack == false) return;
             landingCircle.positionCount = 0;
             bool isAiming =
                 SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right);
