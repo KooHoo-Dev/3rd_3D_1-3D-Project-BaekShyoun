@@ -10,6 +10,9 @@ EditorBuildSettings:
     guid: 891368762bf708d408b7a0075bb3c067
   - enabled: 1
     path: Assets/90. Hare and Tortoise/00. Scenes/01. Tutorial B.unity
+    guid: 09305e23e0350114f9f26c723fe34351
+  - enabled: 1
+    path: Assets/90. Hare and Tortoise/00. Scenes/02. Tutorial C.unity
     guid: e37dc286891a92642b2547ff7a3f1c6b
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

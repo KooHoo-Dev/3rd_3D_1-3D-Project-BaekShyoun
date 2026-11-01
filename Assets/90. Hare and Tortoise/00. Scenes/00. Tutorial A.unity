@@ -456,7 +456,7 @@ GameObject:
   m_Component:
   - component: {fileID: 556951880}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: Mechanic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -474,15 +474,9 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 7490681090976979449}
+  m_Children: []
   m_Father: {fileID: 1348986560}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &706130121 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2067925196952943423, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-  m_PrefabInstance: {fileID: 4565569378033045000}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &798075243
 GameObject:
   m_ObjectHideFlags: 0
@@ -535,6 +529,16 @@ MonoBehaviour:
   lockOnSensitivity: 0.05
   pitchAngleMin: -5
   pitchAngleMax: 10
+  grenadePrefab: {fileID: 0}
+  grenadeHoldPoint: {fileID: 0}
+  throwSpeed: 12
+  throwUpwardSpeed: 5
+  trajectoryLine: {fileID: 0}
+  trajectoryPointCount: 60
+  trajectoryTimeStep: 0.1
+  landingCircle: {fileID: 0}
+  landingCircleRadius: 0.5
+  landingCirclePointCount: 40
   cameraPivot: {fileID: 12015016}
   cameraTransform: {fileID: 17314235}
   distance: 4
@@ -885,8 +889,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bee7f5dc8f6e73942a956f47861b34ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HareAndTortoise.RaceManager
-  canStartTortoise: 0
-  canStartHare: 0
+  stageType: 0
+  prepareDuration: 60
+  raceText: {fileID: 0}
+  cameras: []
+  mainCam: {fileID: 0}
 --- !u!1 &1882100095
 GameObject:
   m_ObjectHideFlags: 0
@@ -2040,9 +2047,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HareAndTortoise.HareController
   goalPoint: {fileID: 1882100096}
-  sleepTree: {fileID: 7490681090976979449}
-  sleepSpot: {fileID: 706130121}
+  canSleep: 0
+  sleepTree: {fileID: 0}
+  sleepSpot: {fileID: 0}
   sleepRadius: 7
+  horizontalImpulse: 8
+  upwardImpulse: 5
+  attackedDuration: 10
+  ragdollHips: {fileID: 0}
 --- !u!195 &3371095980158876153
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -2292,63 +2304,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2593966475532435547}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &4565569378033045000
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 556951880}
-    m_Modifications:
-    - target: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0.510002
-      objectReference: {fileID: 0}
-    - target: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 21.3
-      objectReference: {fileID: 0}
-    - target: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1061387420869617359, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-      propertyPath: m_Name
-      value: SleepTree
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
 --- !u!1 &4680798929625172673
 GameObject:
   m_ObjectHideFlags: 0
@@ -2695,11 +2650,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2785851217701929885}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &7490681090976979449 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 21129652435656833, guid: 03196137484b3d541a3c96309620ec4f, type: 3}
-  m_PrefabInstance: {fileID: 4565569378033045000}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7542629610688595375
 Transform:
   m_ObjectHideFlags: 0

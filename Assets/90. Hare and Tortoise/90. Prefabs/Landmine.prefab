@@ -125,3 +125,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc2a57213aa44bc29f0c82b84d2a4e5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HareAndTortoise.TortoiseLandmine
+  explosionEffectPrefab: {fileID: 5481530993414605263, guid: 266ed7c065bc9d2419f0eca50ffd8b9f, type: 3}
+  explosionEffectLifetime: 5
+  explosionSound: {fileID: 8300000, guid: 9d28d9511e9223446949f1ac10ea2868, type: 3}
+  explosionVolume: 1

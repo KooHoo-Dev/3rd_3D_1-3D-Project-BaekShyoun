@@ -29,7 +29,7 @@ namespace HareAndTortoise
 
                 if (hare == null) continue;
 
-                hare.ApplyKnockback();
+                hare.ApplyKnockback(transform.position);
                 break;
             }
             

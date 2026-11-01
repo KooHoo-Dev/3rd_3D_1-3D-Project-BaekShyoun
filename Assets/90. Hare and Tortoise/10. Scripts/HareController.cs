@@ -2,9 +2,11 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.AI;
 using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Triggers;
 
 namespace HareAndTortoise
 {
+    // 토끼의 경주 이동, 수면, 피격, 래그돌 전환과 코스 복귀
     public class HareController : MonoBehaviour
     {
         private static readonly int Speed = Animator.StringToHash("Speed");
@@ -13,42 +15,67 @@ namespace HareAndTortoise
         private CancellationToken destroyToken;
         
         [Header("Goal Settings")]
-        [SerializeField] private Transform goalPoint;
-        
+        [SerializeField] private Transform goalPoint; // 토끼의 목표 지점
+
         [Header("Sleep Settings")]
-        [SerializeField] private Transform sleepTree;
-        [SerializeField] private Transform sleepSpot;
-        [SerializeField] private float sleepRadius = 3f;
-        private Vector3 prevPos;
-        private bool hasSlept;
-        private HareState state = HareState.ToGoal;
+        [SerializeField] private bool canSleep = true;
+        [SerializeField] private Transform sleepTree; // 토끼가 수면을 취할 나무 위치
+        [SerializeField] private Transform sleepSpot; // 토끼가 실제로 잠드는 위치
+        [SerializeField] private float sleepRadius = 3f; // 토끼가 자러 가기 위한 나무 중심의 반경
+        private Vector3 prevPos; // 수면, 피격으로 코스를 벗어난 후 돌아갈 위치
+        private bool hasSlept; // 한 번 잠든 후 나무에서 무한으로 잠드는 것 방지
+        private HareState state = HareState.ToGoal; // 토끼의 현재 행동 상태
 
         [Header("Knockback Settings")]
-        [SerializeField] private Transform knockbackDirection;
-        [SerializeField] private float horizontalImpulse = 8f; // 수평
-        [SerializeField] private float upwardImpulse = 5f; // 수직(+)
-        [SerializeField] private float attackedDuration = 10f;
+        [SerializeField] private float horizontalImpulse = 8f; // 수평 넉백
+        [SerializeField] private float upwardImpulse = 5f; // 수직(위) 넉백
+        [SerializeField] private float attackedDuration = 10f; // 피격 후 복귀를 위해 기다리는 시간
+
+        [Header("Ragdoll Settings")]
+        [SerializeField] private Rigidbody ragdollHips; // 골반 Rigidbody
+        private Rigidbody[] ragdollBodies; // 골반의 자식객체에 있는 Rigidbody
+        private Vector3[] ragdollLocalPositions; // 각 뼈의 위치
+        private Quaternion[] ragdollLocalRotations; // 각 뼈의 회전
 
 
         private enum HareState
         {
-            ToGoal,
-            ToSleep,
-            Sleeping,
-            Attacked,
-            Returning,
+            ToGoal,     // 결승점 이동
+            ToSleep,    // 자러가는 중
+            Sleeping,   // 자는 중
+            Attacked,   // 피격된 상태
+            Returning,  // 복귀 중
         }
 
         // 컴포넌트
-        private NavMeshAgent agent;
-        private Animator animator;
+        private NavMeshAgent agent; // 경로 탐색
+        private Animator animator; // 애니메이션
+        private Rigidbody rootBody; // Hare Rigidbody 저장용
+        private Collider rootCollider; // Hare Collider. 래그돌 사용 시 끈다.
         
         private void Awake()
         {
             destroyToken = this.GetCancellationTokenOnDestroy();
             agent = GetComponent<NavMeshAgent>();
             animator = GetComponent<Animator>();
+            rootBody = GetComponent<Rigidbody>();
+            rootCollider = GetComponent<Collider>();
             hasSlept = false;
+
+            ragdollBodies = ragdollHips != null 
+                ? ragdollHips.GetComponentsInChildren<Rigidbody>(true) : new Rigidbody[0];
+            ragdollLocalPositions = new Vector3[ragdollBodies.Length];
+            ragdollLocalRotations = new Quaternion[ragdollBodies.Length];
+
+            for (int i = 0; i < ragdollBodies.Length; i++)
+            {
+                Transform bone = ragdollBodies[i].transform;
+
+                ragdollLocalPositions[i] = bone.localPosition;
+                ragdollLocalRotations[i] = bone.localRotation;
+            }
+            
+            SetRagdollActive(false);
         }
         
         private void Update()
@@ -61,7 +88,85 @@ namespace HareAndTortoise
             }
             CheckState();
         }
+        
+        # region Ragdoll Methods
+        
+        private void SetRagdollActive(bool isActive)
+        {
+            if (ragdollBodies.Length == 0) return;
+            
+            animator.enabled = isActive == false;
+            if (rootCollider != null)
+            {
+                rootCollider.enabled = isActive == false;
+            }
 
+            for (int i = 0; i < ragdollBodies.Length; i++)
+            {
+                Rigidbody rBody = ragdollBodies[i];
+
+                rBody.isKinematic = isActive == false;
+                rBody.detectCollisions = isActive;
+            }
+        }
+
+        private void ResetRagdollPose()
+        {
+            for (int i = 0; i < ragdollBodies.Length; i++)
+            {
+                Transform bone = ragdollBodies[i].transform;
+
+                bone.localPosition = ragdollLocalPositions[i];
+                bone.localRotation = ragdollLocalRotations[i];
+            }
+        }
+
+        private bool IsRagdollSleeping()
+        {
+            for (int i = 0; i < ragdollBodies.Length; i++)
+            {
+                if (ragdollBodies[i].IsSleeping() == false) return false;
+            }
+
+            return true;
+        }
+
+        private async UniTaskVoid RecoverFromRagdoll()
+        {
+            await UniTask.WaitForSeconds(attackedDuration, cancellationToken: destroyToken);
+            float time = 0f;
+            while (IsRagdollSleeping() == false && time < 3f)
+            {
+                await UniTask.NextFrame(cancellationToken: destroyToken);
+                time += Time.deltaTime;
+            }
+
+            bool foundPosition 
+                = NavMesh.SamplePosition(ragdollHips.position, out NavMeshHit hit, 3f, agent.areaMask);
+
+            if (foundPosition == false)
+            { 
+                foundPosition = NavMesh.SamplePosition(prevPos, out hit, 3f, agent.areaMask);
+            }
+            
+            // 탐색을 실패했을 때의 임시 방편임. 나중에 수정될 것.
+            if (foundPosition == false)
+            {
+                Debug.LogWarning("토끼가 복귀할 NavMesh를 찾지 못했습니다.");
+                return;
+            }
+            
+            SetRagdollActive(false);
+            ResetRagdollPose();
+
+            transform.position = hit.position;
+            animator.SetBool(IsSleeping, false);
+            agent.enabled = true;
+            agent.Warp(hit.position);
+            SetReturnStat();
+        }
+        
+        # endregion
 
         private void CheckState()
         {
@@ -88,6 +193,7 @@ namespace HareAndTortoise
             Debug.Log("MoveToGoal Start");
             SetHareMoving(3.5f);
             agent.SetDestination(goalPoint.position);
+            if (canSleep == false) return;
             // 원형 범위 검사
             Vector3 offset = transform.position - sleepTree.position;
             offset.y = 0;
@@ -152,8 +258,7 @@ namespace HareAndTortoise
         }
         
         // 넉백 판정
-        [ContextMenu("Test Knockback")]
-        public void ApplyKnockback()
+        public void ApplyKnockback(Vector3 explosionPosition)
         {
             if (state == HareState.Sleeping || state == HareState.Attacked) return;
             Rigidbody rBody = GetComponent<Rigidbody>();
@@ -166,15 +271,35 @@ namespace HareAndTortoise
             state = HareState.Attacked;
             
             agent.enabled = false;
-            rBody.isKinematic = false;
+            rBody.isKinematic = ragdollBodies.Length > 0;
 
             // 날아가는 방향 랜덤 설정 - 추후 시간이 남으면 폭발 지점과 현 위치에 맞는 방향으로 날아가게 수정
-            float randomAngle = Random.Range(-135f, 135f);
-            Vector3 direction = Quaternion.Euler(0f, randomAngle, 0f) * (-transform.forward);
-            direction.y = 0;
+            Vector3 direction = transform.position - explosionPosition;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+            {
+                direction = -transform.forward;
+                direction.y = 0f;
+            }
             direction.Normalize();
 
             Vector3 impulse = direction * horizontalImpulse + Vector3.up * upwardImpulse;
+
+            if (ragdollBodies.Length > 0)
+            {
+                SetRagdollActive(true);
+
+                for (int i = 0; i < ragdollBodies.Length; i++)
+                {
+                    Rigidbody boneBody = ragdollBodies[i];
+                    boneBody.linearVelocity = impulse;
+                    boneBody.angularVelocity = Vector3.zero;
+                }
+                
+                RecoverFromRagdoll();
+                return;
+            }
+            
             rBody.AddForce(impulse, ForceMode.Impulse);
             animator.SetBool(IsSleeping, true);
 

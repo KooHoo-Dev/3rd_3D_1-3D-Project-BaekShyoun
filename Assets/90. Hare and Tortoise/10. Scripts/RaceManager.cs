@@ -9,9 +9,24 @@ using Unity.Cinemachine;
 
 namespace HareAndTortoise
 {
+    public enum StageType
+    {
+        TutorialA,
+        TutorialB,
+        TutorialC,
+        Stage1,
+    }
+    
     public class RaceManager : MonoBehaviour
     {
         public static RaceManager Instance { get; private set; }
+
+        [Header("Stage Settings")]
+        [SerializeField] private StageType stageType = StageType.TutorialC;
+        public bool CanSleep { get; private set; } = true;
+        public bool CanAttack { get; private set; } = true;
+        public bool HasPreparation { get; private set; } = true;
+        
         
         public bool canStartTortoise { get; private set; }
         public bool canStartHare { get; private set; }
@@ -37,6 +52,8 @@ namespace HareAndTortoise
         
         private void OnTriggerEnter(Collider other)
         {
+            if (canDecideWinner) return;
+            
             if (other.CompareTag("Tortoise"))
             {
                 Debug.Log($"거북이 승리!");
@@ -59,6 +76,7 @@ namespace HareAndTortoise
         {
             Instance = this;
             destroyToken = this.GetCancellationTokenOnDestroy();
+            
         }
 
         private void OnDestroy()
@@ -98,7 +116,8 @@ namespace HareAndTortoise
                 if (winnerName == "토끼")
                 {
                     Debug.Log("재도전하시겠습니까? ( Y / N )");
-                    if (SimpleInput.GetKeyDown(Key.Y)) SceneManager.LoadScene(0);
+                    if (SimpleInput.GetKeyDown(Key.Y)) 
+                        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
                     if (SimpleInput.GetKeyDown(Key.N)) Debug.Log("게임을 종료합니다.-> 편의상 진짜 종료는 아님");
                 }
             }
@@ -106,6 +125,28 @@ namespace HareAndTortoise
             // 이건 진짜 임시. 대충 초기화 로직임
             if (SimpleInput.GetKeyDown(Key.Digit0)) SceneManager.LoadScene(0);
             if (SimpleInput.GetKeyDown(Key.Digit1)) SceneManager.LoadScene(1);
+        }
+
+        private void CheckStage()
+        {
+            switch (stageType)
+            {
+                case StageType.TutorialA:
+                    CanSleep = false;
+                    CanAttack = false;
+                    HasPreparation = false;
+                    break;
+                case StageType.TutorialB:
+                    CanSleep = true;
+                    CanAttack = false;
+                    HasPreparation = false;
+                    break;
+                case StageType.TutorialC:
+                    CanSleep = true;
+                    CanAttack = true;
+                    HasPreparation = true;
+                    break;
+            }
         }
         
         public void RequestToStart()
