@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using Cysharp.Threading.Tasks;
 using Unity.Cinemachine;
+using UnityPipeline.Microsoft.CodeAnalysis.FlowAnalysis;
 
 namespace HareAndTortoise
 {
@@ -23,6 +24,8 @@ namespace HareAndTortoise
 
         [Header("Stage Settings")]
         [SerializeField] private StageType stageType = StageType.TutorialC;
+
+        public bool IsStage1 => stageType == StageType.Stage1;
         public bool CanSleep { get; private set; } = true;
         public bool CanAttack { get; private set; } = true;
         public bool HasPreparation { get; private set; } = true;
@@ -61,6 +64,12 @@ namespace HareAndTortoise
             
             if (other.CompareTag("Tortoise"))
             {
+                Debug.Log("거북이 결승선 진입 감지");
+                if (IsStage1)
+                {
+                    TortoiseController tortoise = other.GetComponentInParent<TortoiseController>();
+                    if (tortoise == null || tortoise.HasDoneRoute == false) return;
+                }
                 Debug.Log($"거북이 승리!");
                 TextManager.SetMessage(raceText, true, "Tortoise Win!\nTry Next Stage( Y / N )");
                 canStartHare = false;
@@ -69,6 +78,11 @@ namespace HareAndTortoise
             }
             if (other.CompareTag("Hare"))
             {
+                if (IsStage1)
+                {
+                    HareController hare = other.GetComponent<HareController>();
+                    if (hare == null || hare.HasDoneRoute == false) return;
+                }
                 Debug.Log($"토끼 승리!");
                 TextManager.SetMessage(raceText, true, "Hare Win!\nTry Again( Y / N )");
                 canStartTortoise = false;

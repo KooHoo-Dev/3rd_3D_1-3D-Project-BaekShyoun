@@ -119776,7 +119776,7 @@ GameObject:
   - component: {fileID: 981207912}
   - component: {fileID: 981207911}
   - component: {fileID: 981207913}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: 01 Flat Terrain - 150 x 130m - 8m dirt circuit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -268244,6 +268244,9 @@ MonoBehaviour:
   cameraPivot: {fileID: 7636551633214999168}
   cameraTransform: {fileID: 4727352120507996792}
   distance: 2
+  outlineWaypoints: {fileID: 8804000000000000003}
+  checkpointRadius: 10
+  waypointIndex: 0
 --- !u!4 &5920591302557555469
 Transform:
   m_ObjectHideFlags: 0

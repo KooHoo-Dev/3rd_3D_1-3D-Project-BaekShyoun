@@ -1,6 +1,7 @@
 using Study.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityPipeline.Microsoft.CodeAnalysis.FlowAnalysis;
 using Cursor = UnityEngine.Cursor;
 
 namespace HareAndTortoise
@@ -39,6 +40,13 @@ namespace HareAndTortoise
         [SerializeField] private Transform cameraPivot;
         [SerializeField] private Transform cameraTransform;
         [SerializeField] private float distance = 4f; // radius. 공전 궤도의 크기
+
+        [Header("Stage1 Route Settings")]
+        [SerializeField] private Transform outlineWaypoints;
+        [SerializeField] private float checkpointRadius = 2f;
+        [SerializeField] private int waypointIndex;
+        public bool HasDoneRoute => outlineWaypoints != null && outlineWaypoints.childCount > 0
+                                                             && waypointIndex >= outlineWaypoints.childCount;
         
         // 입력 회전량들을 모아둘겁니다
         private float angleX = 0.0f;
@@ -60,6 +68,9 @@ namespace HareAndTortoise
 
             // 조준 및 발사
             AimGrenade();
+
+            if (RaceManager.Instance.IsStage1 && RaceManager.Instance.canStartTortoise)
+                CheckStageRoute();
         }
 
         private void LateUpdate()
@@ -75,6 +86,18 @@ namespace HareAndTortoise
             transform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
             angleY=spawnPoint.eulerAngles.y;
             cameraPivot.rotation = Quaternion.Euler(angleX, angleY, 0f);
+        }
+
+        private void CheckStageRoute()
+        {
+            if (HasDoneRoute) return;
+            Transform target = outlineWaypoints.GetChild(waypointIndex);
+            Vector3 offset = transform.position - target.position;
+            offset.y = 0f;
+            if (offset.sqrMagnitude <= checkpointRadius * checkpointRadius)
+            {
+                waypointIndex++;
+            }
         }
         
         # endregion

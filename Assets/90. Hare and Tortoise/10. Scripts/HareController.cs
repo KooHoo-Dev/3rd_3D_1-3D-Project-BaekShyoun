@@ -2,7 +2,6 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.AI;
 using Cysharp.Threading.Tasks;
-using Cysharp.Threading.Tasks.Triggers;
 
 namespace HareAndTortoise
 {
@@ -20,6 +19,9 @@ namespace HareAndTortoise
         [Header("Stage1 Route Settings")] [SerializeField]
         private Transform inlineWaypoints; // 인라인 경유지점
         private int waypointIndex; // 앞으로 향할 경유지점 번호
+
+        public bool HasDoneRoute => inlineWaypoints != null && inlineWaypoints.childCount > 0 &&
+                                    waypointIndex >= inlineWaypoints.childCount;
 
         [Header("Sleep Settings")]
         [SerializeField] private Transform sleepTree; // 토끼가 수면을 취할 나무 위치
@@ -144,10 +146,11 @@ namespace HareAndTortoise
                 time += Time.deltaTime;
             }
 
+            Vector3 recoveryPosition = ragdollHips.position;
             bool foundPosition 
-                = NavMesh.SamplePosition(ragdollHips.position, out NavMeshHit hit, 3f, agent.areaMask);
+                = NavMesh.SamplePosition(recoveryPosition, out NavMeshHit hit, 3f, agent.areaMask);
 
-            if (foundPosition == false)
+            if (foundPosition == false && RaceManager.Instance.IsStage1 == false) 
             { 
                 foundPosition = NavMesh.SamplePosition(prevPos, out hit, 3f, agent.areaMask);
             }
@@ -165,7 +168,8 @@ namespace HareAndTortoise
             transform.position = hit.position;
             animator.SetBool(IsSleeping, false);
             agent.enabled = true;
-            agent.Warp(hit.position);
+            if (agent.Warp(hit.position) == false) return;
+            agent.ResetPath();
             SetReturnStat();
         }
         
@@ -179,6 +183,25 @@ namespace HareAndTortoise
                 return;
             if (agent.Warp(hit.position) == false) return;
             transform.rotation = spawnPoint.rotation;
+        }
+
+        private void FollowStageRoute()
+        {
+            SetHareMoving(3.5f);
+            if (agent.pathPending) return;
+            Transform target = waypointIndex < inlineWaypoints.childCount
+                ? inlineWaypoints.GetChild(waypointIndex)
+                : goalPoint;
+            Vector3 offset = transform.position - target.position;
+            offset.y = 0f;
+            if (waypointIndex < inlineWaypoints.childCount && offset.sqrMagnitude <= 0.25f * 0.25f)
+            {
+                waypointIndex++;
+                return;
+            }
+
+            if (agent.hasPath == false || (agent.destination - target.position).sqrMagnitude > 0.01f)
+                agent.SetDestination(target.position);
         }
         
         # endregion
@@ -205,7 +228,11 @@ namespace HareAndTortoise
         
         private void MoveToGoal()
         {
-            Debug.Log("MoveToGoal Start");
+            if(RaceManager.Instance.IsStage1)
+            {
+                FollowStageRoute();
+                return;
+            }
             SetHareMoving(3.5f);
             agent.SetDestination(goalPoint.position);
             
@@ -281,8 +308,11 @@ namespace HareAndTortoise
             Rigidbody rBody = GetComponent<Rigidbody>();
             
             // 날아가기 직전 위치
-            if(state==HareState.ToGoal)
-                prevPos = transform.position;
+            if (state == HareState.ToGoal)
+            {
+                prevPos = RaceManager.Instance.IsStage1 ? agent.nextPosition : transform.position;
+
+            }
             
             SetHareMoving(0f);
             state = HareState.Attacked;
