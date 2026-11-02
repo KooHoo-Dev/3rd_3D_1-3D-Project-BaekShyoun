@@ -2,6 +2,7 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.AI;
 using Cysharp.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace HareAndTortoise
 {
@@ -38,6 +39,8 @@ namespace HareAndTortoise
 
         [Header("Ragdoll Settings")]
         [SerializeField] private Rigidbody ragdollHips; // 골반 Rigidbody
+        public Transform FlightCameraTarget => ragdollHips != null ? ragdollHips.transform : transform;
+        public bool IsInFlight { get; private set; }
         private Rigidbody[] ragdollBodies; // 골반의 자식객체에 있는 Rigidbody
         private Vector3[] ragdollLocalPositions; // 각 뼈의 위치
         private Quaternion[] ragdollLocalRotations; // 각 뼈의 회전
@@ -78,6 +81,17 @@ namespace HareAndTortoise
 
                 ragdollLocalPositions[i] = bone.localPosition;
                 ragdollLocalRotations[i] = bone.localRotation;
+                
+                if (bone.GetComponent<HareFlightCollision>() == null)
+                {
+                    bone.gameObject.AddComponent<HareFlightCollision>();
+                }
+
+            }
+            
+            if (ragdollBodies.Length == 0 && GetComponent<HareFlightCollision>() == null)
+            {
+                gameObject.AddComponent<HareFlightCollision>();
             }
             
             SetRagdollActive(false);
@@ -110,7 +124,12 @@ namespace HareAndTortoise
             {
                 Rigidbody rBody = ragdollBodies[i];
 
+                // 빠르게 날아갈 때는 연속 충돌 검출, 비활성 상태에서는 일반 검출을 사용한다.
+                if (isActive == false)
+                    rBody.collisionDetectionMode = CollisionDetectionMode.Discrete;
                 rBody.isKinematic = isActive == false;
+                if (isActive)
+                    rBody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                 rBody.detectCollisions = isActive;
             }
         }
@@ -150,6 +169,14 @@ namespace HareAndTortoise
             bool foundPosition 
                 = NavMesh.SamplePosition(recoveryPosition, out NavMeshHit hit, 3f, agent.areaMask);
 
+            // 수관 위라서 지면을 찾지 못하면, 나무를 관통해 옮기지 않고 물리 상태로 빠져나온다.
+            if (IsSupportedByTree())
+            {
+                await SlideOffTree();
+                recoveryPosition = ragdollHips.position;
+                foundPosition = NavMesh.SamplePosition(recoveryPosition, out hit, 3f, agent.areaMask);
+            }
+
             if (foundPosition == false && RaceManager.Instance.IsStage1 == false) 
             { 
                 foundPosition = NavMesh.SamplePosition(prevPos, out hit, 3f, agent.areaMask);
@@ -171,6 +198,48 @@ namespace HareAndTortoise
             if (agent.Warp(hit.position) == false) return;
             agent.ResetPath();
             SetReturnStat();
+        }
+
+        private bool IsSupportedByTree()
+        {
+            RaycastHit[] hits = Physics.RaycastAll(ragdollHips.position + Vector3.up * 0.3f,
+                Vector3.down, 3f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                if (hits[i].collider.gameObject.name == "Tree Collision") return true;
+            }
+            return false;
+        }
+
+        private async UniTask SlideOffTree()
+        {
+            float elapsed = 0f;
+            while (elapsed < 6f && IsSupportedByTree())
+            {
+                Vector3 direction = prevPos - ragdollHips.position;
+                direction.y = 0f;
+                if (direction.sqrMagnitude < 0.01f) direction = -transform.forward;
+                direction.Normalize();
+                for (int i = 0; i < ragdollBodies.Length; i++)
+                {
+                    Rigidbody body = ragdollBodies[i];
+                    Vector3 velocity = body.linearVelocity;
+                    velocity.x = direction.x * 2.5f;
+                    velocity.z = direction.z * 2.5f;
+                    body.linearVelocity = velocity;
+                    body.WakeUp();
+                }
+                await UniTask.WaitForFixedUpdate(cancellationToken: destroyToken);
+                elapsed += Time.fixedDeltaTime;
+            }
+
+            // 수관을 벗어난 뒤에도 낙하와 착지는 물리로 처리한다.
+            elapsed = 0f;
+            while (IsRagdollSleeping() == false && elapsed < 3f)
+            {
+                await UniTask.WaitForFixedUpdate(cancellationToken: destroyToken);
+                elapsed += Time.fixedDeltaTime;
+            }
         }
         
         # endregion
@@ -234,7 +303,11 @@ namespace HareAndTortoise
                 return;
             }
             SetHareMoving(3.5f);
-            agent.SetDestination(goalPoint.position);
+            if (agent.pathPending) return;
+            if (agent.hasPath == false || (agent.destination - goalPoint.position).sqrMagnitude > 0.01f)
+            {
+                agent.SetDestination(goalPoint.position);
+            }
             
             if (RaceManager.Instance.CanSleep == false) return;
             // 원형 범위 검사
@@ -317,8 +390,12 @@ namespace HareAndTortoise
             SetHareMoving(0f);
             state = HareState.Attacked;
             
+            IsInFlight = true;
+            
             agent.enabled = false;
             rBody.isKinematic = ragdollBodies.Length > 0;
+            if (ragdollBodies.Length == 0)
+                rBody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 
             // 날아가는 방향 랜덤 설정 - 추후 시간이 남으면 폭발 지점과 현 위치에 맞는 방향으로 날아가게 수정
             Vector3 direction = transform.position - explosionPosition;
@@ -352,6 +429,22 @@ namespace HareAndTortoise
 
             RecoverFromKnockBack(rBody);
         }
+        
+        public void NotifyFlightCollision(Collision collision)
+        {
+            if (IsInFlight == false) return;
+
+            // 자기 몸의 다른 뼈와 부딪힌 경우는 제외한다.
+            if (collision.transform.IsChildOf(transform)) return;
+
+            Rigidbody body = ragdollHips != null ? ragdollHips : rootBody;
+
+            // 날아오르는 순간 발이 바닥에 닿아 있어도 비행을 종료하지 않는다.
+            if (body.linearVelocity.y > 0.1f && collision.contactCount > 0 &&
+                collision.GetContact(0).normal.y > 0.5f) return;
+
+            IsInFlight = false;
+        }
 
         private async UniTaskVoid RecoverFromKnockBack(Rigidbody rBody)
         {
@@ -367,6 +460,7 @@ namespace HareAndTortoise
                 return;
             }
 
+            rBody.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rBody.isKinematic = true;
             transform.position = hit.position;
 

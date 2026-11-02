@@ -84,7 +84,9 @@ namespace HareAndTortoise
                     if (hare == null || hare.HasDoneRoute == false) return;
                 }
                 Debug.Log($"토끼 승리!");
-                TextManager.SetMessage(raceText, true, "Hare Win!\nTry Again( Y / N )");
+                TextManager.SetMessage(raceText, true, stageType == StageType.TutorialA
+                    ? "Hare Win!\nContinue Story( Y / N )"
+                    : "Hare Win!\nTry Again( Y / N )");
                 canStartTortoise = false;
                 canDecideWinner = true;
                 winnerName = "토끼";
@@ -146,9 +148,14 @@ namespace HareAndTortoise
 
                 if (winnerName == "토끼")
                 {
-                    Debug.Log("재도전하시겠습니까? ( Y / N )");
-                    if (SimpleInput.GetKeyDown(Key.Y)) 
-                        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                    Debug.Log(stageType == StageType.TutorialA
+                        ? "다음 스토리로 이동하시겠습니까? ( Y / N )"
+                        : "재도전하시겠습니까? ( Y / N )");
+                    if (SimpleInput.GetKeyDown(Key.Y))
+                    {
+                        if (stageType == StageType.TutorialA) LoadStage();
+                        else SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                    }
                     if (SimpleInput.GetKeyDown(Key.N)) Debug.Log("게임을 종료합니다.-> 편의상 진짜 종료는 아님");
                 }
             }
@@ -185,13 +192,13 @@ namespace HareAndTortoise
             switch (stageType)
             {
                 case StageType.TutorialA:
-                    SceneManager.LoadScene("01. Tutorial B");
+                    SceneController.PlayStory("BeforeTutorialB");
                     break;
                 case StageType.TutorialB:
-                    SceneManager.LoadScene("02. Tutorial C");
+                    SceneController.PlayStory("BeforeTutorialC");
                     break;
                 case StageType.TutorialC:
-                    TextManager.SetMessage(raceText, true, "Gonna be soon");
+                    SceneController.PlayStory("AfterTutorialC");
                     break;
             }
         }

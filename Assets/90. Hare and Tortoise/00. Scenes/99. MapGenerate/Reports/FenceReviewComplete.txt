@@ -1,0 +1,1 @@
+Each scene rendered in isolation; other loaded scenes hidden temporarily and restored.

@@ -1,0 +1,24 @@
+4-2: tree collision and fast ragdoll protection
+Static non-convex collision uses existing low-poly meshes; no dynamic tree bodies.
+
+00. Tutorial A: trees=81, static mesh colliders=81, old trunk proxies disabled=0, original unrelated components matched=2915
+01. Tutorial B: trees=82, static mesh colliders=82, old trunk proxies disabled=0, original unrelated components matched=2921
+02. Tutorial C: trees=80, static mesh colliders=80, old trunk proxies disabled=0, original unrelated components matched=2710
+03. Stage 1: trees=360, static mesh colliders=360, old trunk proxies disabled=360, original unrelated components matched=9654
+  PASS 02. Tutorial C SM_Pine_1 canopy drop at 35m/s
+  PASS 02. Tutorial C SM_Pine_1 trunk strike at 25m/s
+  PASS 02. Tutorial C SM_Pine_1 actual hare ragdoll drop, 11 bodies, 15m/s
+  PASS 02. Tutorial C live canopy recovery to ground NavMesh, state=Returning, elapsed=3.18s; original return point=(1.50, -0.43, 0.00)
+  PASS 02. Tutorial C SM_Base_Tree_7 canopy drop at 35m/s
+  PASS 02. Tutorial C SM_Base_Tree_7 trunk strike at 25m/s
+  PASS 02. Tutorial C SM_Base_Tree_7 actual hare ragdoll drop, 11 bodies, 15m/s
+  PASS 02. Tutorial C SleepTree SleepTree canopy drop at 35m/s
+  PASS 02. Tutorial C SleepTree SleepTree trunk strike at 25m/s
+  PASS 02. Tutorial C SleepTree SleepTree actual hare ragdoll drop, 11 bodies, 15m/s
+  PASS 03. Stage 1 SM_Pine_4 canopy drop at 35m/s
+  PASS 03. Stage 1 SM_Pine_4 trunk strike at 25m/s
+  PASS 03. Stage 1 SM_Pine_4 actual hare ragdoll drop, 11 bodies, 15m/s
+  PASS 03. Stage 1 live canopy recovery to ground NavMesh, state=Returning, elapsed=3.11s; original return point=(-17.91, 0.03, -25.02)
+  PASS 03. Stage 1 SM_Base_Tree_5 canopy drop at 35m/s
+  PASS 03. Stage 1 SM_Base_Tree_5 trunk strike at 25m/s
+  PASS 03. Stage 1 SM_Base_Tree_5 actual hare ragdoll drop, 11 bodies, 15m/s

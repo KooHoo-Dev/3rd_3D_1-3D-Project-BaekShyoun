@@ -1,6 +1,8 @@
 using Study.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.UIElements;
 using UnityPipeline.Microsoft.CodeAnalysis.FlowAnalysis;
 using Cursor = UnityEngine.Cursor;
 
@@ -30,6 +32,23 @@ namespace HareAndTortoise
         [SerializeField] private LineRenderer trajectoryLine;
         [SerializeField] private int trajectoryPointCount = 60;
         [SerializeField] private float trajectoryTimeStep = 0.1f;
+
+        [Header("Aim Settings")]
+        [SerializeField] private float aimSensitivity = 0.04f;
+        [SerializeField] private float minAimDistance = 1f;
+        [SerializeField] private float maxAimDistance = 25f;
+        [SerializeField] private float throwFlightTime = 1.2f;
+        [SerializeField] private float aimCameraPitch = 50f;
+        [SerializeField] private float aimCameraDistance = 10f;
+        private Vector3 defaultPivotLocalPosition;
+
+        private Vector3 aimTarget;
+        private bool hasAimTarget;
+        private bool isAimValid;
+
+        private bool IsAiming => 
+            RaceManager.Instance.CanAttack && RaceManager.Instance.canStartTortoise && heldGrenade != null
+            && SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right);
         
         [Header("Landing Circle Settings")]
         [SerializeField] private LineRenderer landingCircle;
@@ -57,6 +76,7 @@ namespace HareAndTortoise
 
         private void Awake()
         {
+            defaultPivotLocalPosition = cameraPivot.localPosition;
             animator = GetComponentInChildren<Animator>();
         }
 
@@ -105,6 +125,7 @@ namespace HareAndTortoise
         private void UpdateAngle()
         {
             if (RaceManager.Instance.canStartTortoise == false) return;
+            if (IsAiming) return;
             Vector2 delta = SimpleInput.GetMouseDelta();
             // 우클릭 시(락온 시) 감도 떨구기
             angleX -= SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right)
@@ -112,6 +133,39 @@ namespace HareAndTortoise
             angleY += SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right)
                 ? (delta.x * horizontalSensitivity) * lockOnSensitivity : (delta.x * horizontalSensitivity);
             angleX = Mathf.Clamp(angleX, pitchAngleMin, pitchAngleMax);
+        }
+
+        private void UpdateAimTarget()
+        {
+            isAimValid = false;
+            if (IsAiming == false)
+            {
+                hasAimTarget = false;
+                return;
+            }
+
+            Quaternion yaw = Quaternion.Euler(0f, angleY, 0f);
+            Vector3 forward = yaw * Vector3.forward;
+
+            if (hasAimTarget == false)
+            {
+                aimTarget = transform.position + forward * Mathf.Clamp(8f, minAimDistance, maxAimDistance);
+                hasAimTarget = true;
+            }
+
+            Vector2 delta = SimpleInput.GetMouseDelta();
+            aimTarget += yaw * new Vector3(delta.x, 0f, delta.y) * aimSensitivity;
+
+            Vector3 offset = aimTarget - transform.position;
+            offset.y = 0f;
+            float targetDistance = Mathf.Clamp(offset.magnitude, minAimDistance, maxAimDistance);
+            Vector3 direction = offset.sqrMagnitude > 0.0001f ? offset.normalized : forward;
+            aimTarget = transform.position + direction * targetDistance;
+
+            Vector3 rayStart = aimTarget + Vector3.up * 100f;
+            isAimValid = Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, 200f,
+                LayerMask.GetMask("Ground"), QueryTriggerInteraction.Ignore);
+            if (isAimValid) aimTarget = hit.point;
         }
         
         private void UpdatePosition()
@@ -142,14 +196,42 @@ namespace HareAndTortoise
         private void UpdateCameraRotation()
         {
             if (RaceManager.Instance.canStartTortoise == false) return;
-            // 우클릭 시(락온 시) 카메라 거리 가깝게
-            float targetDistance =
-                SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right) ? 2f : 4f;
 
-            distance = Mathf.Lerp(distance, targetDistance, 5f * Time.deltaTime);
-            
-            cameraPivot.rotation = Quaternion.Euler(angleX, angleY, 0f);
-            cameraTransform.localPosition = new Vector3(1.5f, 0f, -distance);
+            bool aiming = IsAiming && hasAimTarget;
+            float blend = 5f * Time.deltaTime;
+
+            if (aiming)
+            {
+                // 거북이와 착지점 사이를 화면의 중심으로 잡는다.
+                Vector3 focus = Vector3.Lerp(transform.position, aimTarget, 0.5f);
+                focus.y = transform.position.y + defaultPivotLocalPosition.y;
+
+                cameraPivot.position = Vector3.Lerp(cameraPivot.position, focus, blend);
+            }
+            else
+            {
+                cameraPivot.localPosition = Vector3.Lerp(cameraPivot.localPosition, 
+                    defaultPivotLocalPosition, blend);
+            }
+
+            float pitch = aiming ? aimCameraPitch : angleX;
+            Quaternion targetRotation = Quaternion.Euler(pitch, angleY, 0f);
+
+            cameraPivot.rotation = aiming ? Quaternion.Slerp(cameraPivot.rotation, targetRotation, blend)
+                : targetRotation;
+
+            Vector3 offset = aimTarget - transform.position;
+            offset.y = 0f;
+
+            // 먼 곳을 겨누면 카메라도 물러나서 양쪽을 함께 보여준다.
+            float targetDistance = aiming
+                ? Mathf.Max(aimCameraDistance, offset.magnitude + 4f) : 4f;
+
+            distance = Mathf.Lerp(distance, targetDistance, blend);
+
+            Vector3 cameraPosition = new Vector3(aiming ? 0f : 1.5f, 0f, -distance);
+
+            cameraTransform.localPosition = Vector3.Lerp(cameraTransform.localPosition, cameraPosition, blend);
         }
         
         private void LockCursor()
@@ -164,6 +246,7 @@ namespace HareAndTortoise
         // 수류탄 조준
         private void AimGrenade()
         {
+            UpdateAimTarget();
             if (RaceManager.Instance.CanAttack == false) return;
             if (RaceManager.Instance.canStartTortoise == false) return;
             if (SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right) == false) return;
@@ -188,11 +271,18 @@ namespace HareAndTortoise
                 ThrowGrenade();
             }
         }
+
+        private Vector3 CalculateThrowVelocity(Vector3 startPosition)
+        {
+            float time = Mathf.Max(0.1f, throwFlightTime);
+            Vector3 displacement = aimTarget - startPosition;
+            return displacement / time - Physics.gravity * (0.5f * time);
+        }
         
         // 수류탄 발사
         private void ThrowGrenade()
         {
-            if (heldGrenade == null) return;
+            if (heldGrenade == null || isAimValid == false) return;
             GameObject grenade = heldGrenade;
             heldGrenade = null;
 
@@ -207,9 +297,8 @@ namespace HareAndTortoise
                 col.enabled = true;
             }
 
-            Vector3 direction = Quaternion.Euler(angleX, angleY, 0f) * Vector3.forward;
-            Vector3 velocity = direction * throwSpeed + Vector3.up * throwUpwardSpeed;
-            rBody.AddForce(velocity, ForceMode.VelocityChange);
+            Vector3 velocity = CalculateThrowVelocity(grenade.transform.position);
+            rBody.linearVelocity = velocity;
         }
         
         # endregion
@@ -222,19 +311,15 @@ namespace HareAndTortoise
             bool isAiming =
                 SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right);
 
-            if (RaceManager.Instance.canStartTortoise == false || isAiming == false || heldGrenade == null)
+            if (RaceManager.Instance.canStartTortoise == false ||
+                isAiming == false || heldGrenade == null || isAimValid == false)
             {
                 trajectoryLine.positionCount = 0;
                 return;
             }
 
             Vector3 startPosition = heldGrenade.transform.position;
-
-            Vector3 direction =
-                Quaternion.Euler(angleX, angleY, 0f) * Vector3.forward;
-
-            Vector3 velocity =
-                direction * throwSpeed + Vector3.up * throwUpwardSpeed;
+            Vector3 velocity = CalculateThrowVelocity(startPosition);
 
             trajectoryLine.positionCount = trajectoryPointCount;
             trajectoryLine.SetPosition(0, startPosition);

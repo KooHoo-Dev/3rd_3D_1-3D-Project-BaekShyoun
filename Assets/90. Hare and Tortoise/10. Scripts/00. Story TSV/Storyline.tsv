@@ -1,0 +1,9 @@
+StoryId	Order	SpeakerId	Text
+BeforeTutorialA	1	Hare	나와 경주를 하겠다고?
+BeforeTutorialA	2	Tortoise	응. 끝까지 달려볼 거야.
+BeforeTutorialB	1	Hare	이번에는 조금 쉬어 가도 되겠네.
+BeforeTutorialB	2	Tortoise	나는 멈추지 않고 갈게.
+BeforeTutorialC	1	Tortoise	이제는 다른 방법을 써보겠어.
+BeforeTutorialC	2	Hare	뭔가 달라진 것 같은데?
+AfterTutorialC	1	Tortoise	이제 진짜 경주를 시작하자.
+AfterTutorialC	2	Hare	다음 코스에서 다시 만나.

@@ -1,0 +1,8 @@
+Tutorial trackside fences
+No Rigidbody. No gameplay script, camera, Terrain or NavMesh asset edits.
+00. Tutorial A: 91 visual cubes merged into 13 renderers, 13 static BoxColliders.
+  x=+-6.4m; z=11..87.39; right opening=51.74..67.74001; original component snapshots matched=2695
+01. Tutorial B: 91 visual cubes merged into 13 renderers, 13 static BoxColliders.
+  x=+-6.4m; z=11..87.39; right opening=51.73702..67.73702; original component snapshots matched=2699
+02. Tutorial C: 89 visual cubes merged into 13 renderers, 13 static BoxColliders.
+  x=+-6.4m; z=-3..73.6; right opening=12.5..28.5; original component snapshots matched=2732
