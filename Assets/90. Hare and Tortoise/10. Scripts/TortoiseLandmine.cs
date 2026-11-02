@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Cinemachine;
+using UnityEngine;
 
 namespace HareAndTortoise
 {
@@ -10,7 +11,13 @@ namespace HareAndTortoise
         [SerializeField, Range(0f, 1f)] private float explosionVolume = 1f;
         
         private bool hasExploded;
+        private CinemachineImpulseSource impulseSource;
 
+        private void Awake()
+        {
+            impulseSource = GetComponent<CinemachineImpulseSource>();
+        }
+        
         private void OnTriggerEnter(Collider other)
         {
             if (RaceManager.Instance.CanAttack == false) return;
@@ -20,7 +27,7 @@ namespace HareAndTortoise
             if (hare == null) return;
             hasExploded = true;
             hare.ApplyKnockback(transform.position);
-
+            
             if (explosionEffectPrefab != null)
             {
                 GameObject effect = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
@@ -32,8 +39,8 @@ namespace HareAndTortoise
                 AudioSource.PlayClipAtPoint(explosionSound, transform.position, explosionVolume);
             }
             
+            impulseSource.GenerateImpulse(new Vector3((Random.value < 0.5f ? -1 : 1), 1, 0));
             Destroy(gameObject);
-            
         }
     }
 }

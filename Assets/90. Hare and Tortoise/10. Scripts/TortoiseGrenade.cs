@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Cinemachine;
+using UnityEngine;
 
 namespace HareAndTortoise
 {
@@ -10,7 +11,13 @@ namespace HareAndTortoise
         [SerializeField] private AudioClip explosionSound;
         [SerializeField, Range(0f, 1f)] private float explosionVolume = 1f;
         private bool hasExploded;
+        private CinemachineImpulseSource impulseSource;
 
+        private void Awake()
+        {
+            impulseSource = GetComponent<CinemachineImpulseSource>();
+        }
+        
         private void OnCollisionEnter(Collision collision)
         {
             if (hasExploded) return;
@@ -52,7 +59,8 @@ namespace HareAndTortoise
                     transform.position,
                     explosionVolume);
             }
-            
+
+            impulseSource.GenerateImpulse(new Vector3((Random.value < 0.5f ? -1 : 1), 1, 0));
             Destroy(gameObject);
         }
     }
