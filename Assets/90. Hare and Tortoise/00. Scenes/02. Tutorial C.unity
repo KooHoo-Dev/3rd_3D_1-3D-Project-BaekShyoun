@@ -787,6 +787,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HareAndTortoise.RaceManager
   stageType: 2
+  hareTransform: {fileID: 0}
+  tortoiseTransform: {fileID: 0}
+  hareSpawnPoint: {fileID: 0}
+  tortoiseSpawnPoint: {fileID: 0}
   prepareDuration: 60
   raceText: {fileID: 7243242714560996798}
   cameras:
@@ -1428,6 +1432,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HareAndTortoise.HareController
   goalPoint: {fileID: 1882100096}
+  inlineWaypoints: {fileID: 0}
   sleepTree: {fileID: 7490681090976979449}
   sleepSpot: {fileID: 706130121}
   sleepRadius: 7
