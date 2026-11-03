@@ -7183,7 +7183,7 @@ LODGroup:
     fadeTransitionWidth: 0
     renderers:
     - renderer: {fileID: 3371095979697406907}
-  - screenRelativeHeight: 0.05
+  - screenRelativeHeight: 0
     fadeTransitionWidth: 0
     renderers:
     - renderer: {fileID: 3371095978599896686}
@@ -8461,7 +8461,6 @@ MonoBehaviour:
   hareSpawnPoint: {fileID: 0}
   tortoiseSpawnPoint: {fileID: 0}
   prepareDuration: 60
-  raceText: {fileID: 899544086}
   cameras:
   - {fileID: 6053371627941893941}
   - {fileID: 2332486984034391592}
@@ -8527,6 +8526,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3597033120860223668}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &8998000000000000001
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a05c7afb559e44bd90f449c0e4d773a5, type: 3}
+--- !u!4 &8998000000000000002 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 353815857, guid: a05c7afb559e44bd90f449c0e4d773a5, type: 3}
+  m_PrefabInstance: {fileID: 8998000000000000001}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -8539,3 +8556,4 @@ SceneRoots:
   - {fileID: 1194592465}
   - {fileID: 5148503954489759452}
   - {fileID: 840843376}
+  - {fileID: 8998000000000000002}

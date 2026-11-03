@@ -1,4 +1,0 @@
-Tutorial goal stripes: Stage 1 chalk material style, actual trigger-aligned position.
-00. Tutorial A: position=(0.000, -0.485, 80.990); width=9.8m; depth=0.45m; new colliders=0; original non-transform components matched=1841
-01. Tutorial B: position=(0.000, -0.485, 80.990); width=9.8m; depth=0.45m; new colliders=0; original non-transform components matched=1843
-02. Tutorial C: position=(0.000, -0.485, 67.200); width=9.8m; depth=0.45m; new colliders=0; original non-transform components matched=1839

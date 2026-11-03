@@ -9,6 +9,11 @@ namespace HareAndTortoise
 
         private CinemachineCamera flightCamera;
 
+        // 토끼 시점으로 전환되는 순간부터, 거북이 시점으로 돌아가는 블렌드가 끝날 때까지.
+        public bool IsShowingHare => isActiveAndEnabled && flightCamera != null &&
+            flightCamera.isActiveAndEnabled && hare != null &&
+            (hare.IsInFlight || CinemachineCore.IsLive(flightCamera));
+
         private void Start()
         {
             flightCamera = GetComponent<CinemachineCamera>();

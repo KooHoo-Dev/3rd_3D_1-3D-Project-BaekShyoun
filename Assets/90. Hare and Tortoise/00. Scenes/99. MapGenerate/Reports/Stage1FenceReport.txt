@@ -1,7 +1,0 @@
-Stage 1 inner and outer wooden fences
-Guide-driven closed curves; offset +-6.2m from course center. Height 1.28m.
-Visual cubes=384; combined renderers=16; material slots=32; static BoxColliders=128.
-Minimum planar clearance from lane waypoints / spawns / goals to fence center segments=4.135191m.
-Original component snapshots matched=10065.
-No gameplay, NavMesh, Terrain, camera or source prefab changes. No Rigidbody.
-Meshes use UInt16 indices and no retained CPU-readable copy.

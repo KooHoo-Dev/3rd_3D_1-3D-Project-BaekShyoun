@@ -1,4 +1,0 @@
-Missing scripts: 0
-Missing/unsupported renderer materials: 0
-Terrain collider: True
-Scene saved: Assets/90. Hare and Tortoise/00. Scenes/03. Stage 1.unity

@@ -1,5 +1,0 @@
-Combined meshes: 64
-Vertices: 2261116 -> 2261116
-Triangles preserved: 1034733
-Combined GPU vertex/index payload bytes: 134639870
-CPU read/write disabled for combined meshes. Original source meshes untouched.

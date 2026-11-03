@@ -1,4 +1,0 @@
-Tutorial C objects copied: Main Camera (5 components), PrepareCamera (3 components), UICanvas and RaceText (TMP), EventSystem.
-Cameras has exactly the two copied cameras. Lights, Stage, Props are empty Transform-only root groups.
-All component settings preserved, with local fileIDs remapped and PrepCameraController terrain assigned to Stage 1 Terrain. Existing preview camera objects retained inactive.
-No Unity script files created or modified.

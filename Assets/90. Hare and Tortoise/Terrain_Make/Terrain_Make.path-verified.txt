@@ -1,6 +1,0 @@
-Completed: 2026-10-22T20:06:12.1599351+09:00
-Road footprint: 10 x 40
-Road layer: 3
-Painted samples: 13312
-Verified samples: 13312
-Heights were not modified. Hide ForConvinient to see the painted terrain.

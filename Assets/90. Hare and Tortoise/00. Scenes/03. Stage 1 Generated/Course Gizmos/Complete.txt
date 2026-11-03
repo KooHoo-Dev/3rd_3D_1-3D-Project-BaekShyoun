@@ -1,1 +1,0 @@
-Two closed 256-point guide loops. Inline offset -2m, outline +2m from course centerline; height 0.16m. Start angle=-1.936 radians, aligned to white line. Gizmos only; no runtime movement, NavMesh, collider or LineRenderer added.

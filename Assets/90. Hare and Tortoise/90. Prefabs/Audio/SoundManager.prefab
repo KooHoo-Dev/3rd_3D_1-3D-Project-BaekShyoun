@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &353815855
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 353815857}
+  - component: {fileID: 353815856}
+  m_Layer: 0
+  m_Name: SoundManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &353815857
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 353815855}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &353815856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 353815855}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e4790070fa24ef4eb229468cdbc80b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HareAndTortoise.SoundManager
+  titleNormal: {fileID: 8300000, guid: 696511f400bdaec4e85f5205cab46f1f, type: 3}
+  titleDark: {fileID: 8300000, guid: 38e64b6e20a2e2548a19405e7a962947, type: 3}
+  story: {fileID: 8300000, guid: 2b7640564465bae468a9e76c3ee764df, type: 3}
+  raceNormal: {fileID: 8300000, guid: b5878cb049f2f7b49835fe0aaa981696, type: 3}
+  raceDark: {fileID: 8300000, guid: d9a47456b6906704bb611373c51813da, type: 3}
+  uiClick: {fileID: 8300000, guid: d9693f3aff606bd438dd6297f7c9a6a5, type: 3}
+  dialogueNext: {fileID: 8300000, guid: 172e5d8f8ebb79b4ca3915ea9ccb4f28, type: 3}
+  raceStart: {fileID: 8300000, guid: 8ab580dca0f9f4d4eb188090663c1316, type: 3}
+  victory: {fileID: 8300000, guid: d4df978a2dba1784cbafe866af832fa8, type: 3}
+  defeat: {fileID: 8300000, guid: e3c22fd3a8b05d44c8b1bd514cf6d009, type: 3}
+  grenadeEquip: {fileID: 8300000, guid: 711872eb14fb12743addc9bdc1b8d403, type: 3}
+  grenadeThrow: {fileID: 8300000, guid: a7cd8bbeffccf5d48ace3c9e37c45311, type: 3}
+  landminePlace: {fileID: 8300000, guid: 0d50f95e29bb879488cd2c8d79c54b8f, type: 3}
+  itemUnavailable: {fileID: 8300000, guid: 0d85997d667ffc8498bed74d839ace37, type: 3}
+  hareAnimalHop: {fileID: 8300000, guid: 91fa951e4a9828d49aa66779d95f1916, type: 3}
+  hareHumanoidFootsteps: {fileID: 8300000, guid: b71813a61099cab46b2e901ae9c0a188, type: 3}
+  hareHit: {fileID: 8300000, guid: 29f05a4b69d819c46b0dc8d5aad13d2d, type: 3}
+  hareLand: {fileID: 8300000, guid: 827d7290087db2b4b9feda46c2e84215, type: 3}
+  hareGetUp: {fileID: 8300000, guid: ec88583a2cf04244a964d69d07e1ea22, type: 3}
+  tortoiseAnimalFootsteps: {fileID: 8300000, guid: dd010a10ded625d4ca2e5e895a918d14, type: 3}
+  tortoiseHumanoidFootsteps: {fileID: 8300000, guid: fbbe64c7177e44348a2a8e7e94af07c3, type: 3}
+  musicVolume: 0.3
+  effectsVolume: 0.7
+  uiVolume: 0.5
+  footstepsVolume: 0.35

@@ -7,6 +7,7 @@ namespace HareAndTortoise
     public static class SceneController
     {
         private const string VillainKey = "HareAndTortoise.IsVillain";
+        // 튜토C 전 스토리 완료 여부만 저장해 재실행 후에도 타이틀 상태를 유지한다.
         public static bool IsVillain => PlayerPrefs.GetInt(VillainKey, 0) == 1;
         public static string StoryId { get; private set; } = "BeforeTutorialA";
 
@@ -27,13 +28,12 @@ namespace HareAndTortoise
                     SceneManager.LoadScene("01. Tutorial B");
                     break;
                 case "BeforeTutorialC":
-                    // 흑화 후 타이틀 진입 시 저장해 다음 실행에서도 상태를 유지한다.
                     PlayerPrefs.SetInt(VillainKey, 1);
                     PlayerPrefs.Save();
-                    SceneManager.LoadScene("80. Title");
+                    SceneManager.LoadScene("02. Tutorial C");
                     break;
                 case "AfterTutorialC":
-                    SceneManager.LoadScene("03. Stage 1");
+                    SceneManager.LoadScene("80. Title");
                     break;
             }
         }
@@ -41,6 +41,7 @@ namespace HareAndTortoise
         public static void ResetProgress()
         {
             PlayerPrefs.DeleteKey(VillainKey);
+            StageProgress.ResetProgress();
             PlayerPrefs.Save();
 
             StoryId = "BeforeTutorialA";

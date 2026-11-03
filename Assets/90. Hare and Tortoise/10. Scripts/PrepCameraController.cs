@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using Study.Utilities;
 using UnityEngine;
 using Unity.Cinemachine;
+using UnityEngine.EventSystems;
 
 namespace HareAndTortoise
 {
@@ -37,6 +38,31 @@ namespace HareAndTortoise
             mapMax = new Vector2(origin.x + size.x, origin.z + size.z);
         }
         
+        public void FocusOnRacers()
+        {
+            HareController hare = FindFirstObjectByType<HareController>();
+            TortoiseController tortoise = FindFirstObjectByType<TortoiseController>();
+            if (hare == null || tortoise == null) return;
+
+            Vector3 center = (hare.transform.position + tortoise.transform.position) * 0.5f;
+            Vector3 position = transform.position;
+            position.x = center.x;
+            position.z = center.z;
+            transform.position = position;
+
+            // 두 캐릭터와 이름 표식이 화면에 들어오도록 필요한 경우에만 조금 더 멀리 본다.
+            Vector3 halfOffset = (hare.transform.position - tortoise.transform.position) * 0.5f;
+            float aspect = Mathf.Max(0.1f, (float)Screen.width / Mathf.Max(1, Screen.height));
+            float requiredSize = Mathf.Max(
+                Mathf.Abs(Vector3.Dot(halfOffset, transform.up)) + 6f,
+                (Mathf.Abs(Vector3.Dot(halfOffset, transform.right)) + 6f) / aspect);
+            float zoomMax = GetMaxZoomSize();
+            prepCamera.Lens.OrthographicSize = Mathf.Clamp(
+                Mathf.Max(prepCamera.Lens.OrthographicSize, requiredSize),
+                Mathf.Min(minSize, zoomMax), zoomMax);
+            MapPosition();
+        }
+
         private void Update()
         {
             if (RaceManager.Instance.IsPreParing == false) return;
@@ -49,6 +75,8 @@ namespace HareAndTortoise
         private void PlaceLandmine()
         {
             if (SimpleInput.GetMouseButtonDown(SimpleInput.MouseButton.Left) == false) return;
+            // 준비 완료 버튼이나 HUD를 클릭할 때 지뢰까지 설치되지 않게 한다.
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
             
             Vector2 mousePosition = SimpleInput.GetMousePosition();
 
@@ -66,6 +94,7 @@ namespace HareAndTortoise
 
             if (RaceManager.Instance.TryUseLandmine() == false) return;
             Instantiate(landminePrefab, position, Quaternion.identity);
+            SoundManager.Play(SoundEffect.LandminePlace);
         }
 
         private void UpdateZoom()

@@ -1,9 +1,0 @@
-Stage 1 forest course
-Seed: 7319
-Terrain: 150 x 130 m, flat y=0
-Course center radii: 42 x 30 m; width ~8 m; length ~228 m
-Nature prefab instances: 2711
-Canopy trees: 360
-48 clockwise route markers + runner start
-Existing source prefabs/materials/settings were not edited.
-No gameplay scripts or build-settings changes.

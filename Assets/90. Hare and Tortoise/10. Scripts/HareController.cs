@@ -2,7 +2,6 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.AI;
 using Cysharp.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace HareAndTortoise
 {
@@ -11,6 +10,8 @@ namespace HareAndTortoise
     {
         private static readonly int Speed = Animator.StringToHash("Speed");
         private static readonly int IsSleeping = Animator.StringToHash("IsSleeping");
+        private static readonly int StandingUp = Animator.StringToHash("Base Layer.Standing Up");
+        private static readonly int Idle = Animator.StringToHash("Base Layer.Idle");
 
         private CancellationToken destroyToken;
 
@@ -26,6 +27,10 @@ namespace HareAndTortoise
 
         public bool HasDoneRoute => inlineWaypoints != null && inlineWaypoints.childCount > 0 &&
                                     waypointIndex >= inlineWaypoints.childCount;
+
+        // 마지막 경유지로 향하는 도중 날아가 결승선을 넘어도 골인을 인정한다.
+        public bool CanFinishInFlight => IsInFlight && inlineWaypoints != null &&
+            inlineWaypoints.childCount > 0 && waypointIndex >= inlineWaypoints.childCount - 1;
 
         [Header("Sleep Settings")]
         [SerializeField] private Transform sleepTree; // 토끼가 수면을 취할 나무 위치
@@ -45,6 +50,10 @@ namespace HareAndTortoise
         [SerializeField] private Rigidbody ragdollHips; // 골반 Rigidbody
         public Transform FlightCameraTarget => ragdollHips != null ? ragdollHips.transform : transform;
         public bool IsInFlight { get; private set; }
+        // 공중 비행이나 기상 중에는 발소리가 나오지 않도록 실제 경로 이동만 확인한다.
+        public bool IsMoving => RaceManager.Instance != null && RaceManager.Instance.canStartHare &&
+            (state == HareState.ToGoal || state == HareState.ToSleep || state == HareState.Returning) &&
+            agent != null && agent.enabled && agent.isOnNavMesh && agent.velocity.sqrMagnitude > 0.01f;
         private Rigidbody[] ragdollBodies; // 골반의 자식객체에 있는 Rigidbody
         private Vector3[] ragdollLocalPositions; // 각 뼈의 위치
         private Quaternion[] ragdollLocalRotations; // 각 뼈의 회전
@@ -56,6 +65,7 @@ namespace HareAndTortoise
             ToSleep,    // 자러가는 중
             Sleeping,   // 자는 중
             Attacked,   // 피격된 상태
+            GettingUp,  // 기상 모션 중에는 이동과 추가 피격을 막는다.
             Returning,  // 복귀 중
         }
 
@@ -193,11 +203,26 @@ namespace HareAndTortoise
                 return;
             }
             
+            state = HareState.GettingUp;
+            IsInFlight = false;
             SetRagdollActive(false);
             ResetRagdollPose();
 
             transform.position = hit.position;
             animator.SetBool(IsSleeping, false);
+            animator.SetFloat(Speed, 0f);
+
+            // NavMeshAgent를 끈 상태에서 클립을 끝까지 재생한다.
+            animator.Play(StandingUp, 0, 0f);
+            animator.Update(0f);
+            SoundManager.Play(SoundEffect.HareGetUp);
+            while (animator.GetCurrentAnimatorStateInfo(0).fullPathHash == StandingUp &&
+                   animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1f)
+            {
+                await UniTask.NextFrame(cancellationToken: destroyToken);
+            }
+
+            animator.Play(Idle, 0, 0f);
             agent.enabled = true;
             if (agent.Warp(hit.position) == false) return;
             agent.ResetPath();
@@ -293,6 +318,8 @@ namespace HareAndTortoise
                     break;
                 case HareState.Attacked:
                     break;
+                case HareState.GettingUp:
+                    break;
                 case HareState.Returning:
                     ReturnToTrack();
                     break;
@@ -341,6 +368,7 @@ namespace HareAndTortoise
         private async UniTaskVoid Sleep()
         {
             animator.SetBool(IsSleeping, true);
+            RaceManager.Instance.NotifyHareSleeping();
             await UniTask.WaitForSeconds(attackedDuration, cancellationToken: destroyToken);
             animator.SetBool(IsSleeping, false);
             SetReturnStat();
@@ -363,12 +391,14 @@ namespace HareAndTortoise
             state = HareState.ToGoal;
         }
 
+#if UNITY_EDITOR
         private void OnDrawGizmos()
         {
             if (sleepTree == null) return;
             UnityEditor.Handles.color = Color.red;
             UnityEditor.Handles.DrawWireDisc(sleepTree.position, Vector3.up, sleepRadius);
         }
+#endif
         
         // 애니메이션 단축 메서드
         private void SetHareMoving(float speed)
@@ -381,7 +411,8 @@ namespace HareAndTortoise
         public void ApplyKnockback(Vector3 explosionPosition)
         {
             if (RaceManager.Instance.CanAttack == false) return;
-            if (state == HareState.Sleeping || state == HareState.Attacked) return;
+            if (state == HareState.Sleeping || state == HareState.Attacked ||
+                state == HareState.GettingUp) return;
             Rigidbody rBody = GetComponent<Rigidbody>();
             
             // 날아가기 직전 위치
@@ -393,6 +424,7 @@ namespace HareAndTortoise
             
             SetHareMoving(0f);
             state = HareState.Attacked;
+            SoundManager.Play(SoundEffect.HareHit);
             
             IsInFlight = true;
             
@@ -457,6 +489,8 @@ namespace HareAndTortoise
                 collision.GetContact(0).normal.y > 0.5f) return;
 
             IsInFlight = false;
+            // 여러 뼈가 동시에 충돌해도 첫 외부 충돌에서만 한 번 재생한다.
+            SoundManager.Play(SoundEffect.HareLand);
         }
 
         private async UniTaskVoid RecoverFromKnockBack(Rigidbody rBody)

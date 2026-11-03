@@ -1,8 +1,10 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace HareAndTortoise
 {
@@ -11,15 +13,26 @@ namespace HareAndTortoise
     {
         [SerializeField] private TextAsset storyTable;
         [SerializeField] private TMP_Text characterText;
+        [SerializeField] private GameObject characterBox;
         [SerializeField] private TMP_Text lineText;
         [SerializeField] private GameObject normalCharacters;
         [SerializeField] private GameObject humanoidCharacters;
+
+        [Header("Appearance Transition")]
+        [SerializeField] private Image appearanceFade;
+        [SerializeField] private float appearanceFadeDuration = 0.5f;
+        private bool isChangingAppearance;
 
         private readonly List<StoryLine> lines = new List<StoryLine>();
         private int lineIndex;
         private bool isFinished;
         private Renderer[] tortoiseRenderers;
         private Renderer[] hareRenderers;
+        private Renderer[] normalTortoiseRenderers;
+        private Renderer[] normalHareRenderers;
+        private Renderer[] humanoidTortoiseRenderers;
+        private Renderer[] humanoidHareRenderers;
+        private MaterialPropertyBlock colorBlock;
 
         private struct StoryLine
         {
@@ -28,26 +41,39 @@ namespace HareAndTortoise
             public string Text;
         }
 
+        private void Awake()
+        {
+            // Unity 리소스는 필드 초기화가 아니라 메인 스레드의 Awake에서 생성한다.
+            colorBlock = new MaterialPropertyBlock();
+        }
+
         private void Start()
         {
-            if (storyTable == null || characterText == null || lineText == null)
+            if (storyTable == null || characterText == null || lineText == null ||
+                characterBox == null || normalCharacters == null || humanoidCharacters == null ||
+                appearanceFade == null)
             {
-                Debug.LogError("StoryController의 TSV·화자·대사 참조를 연결해주세요.", this);
+                Debug.LogError("StoryController의 TSV·화자 박스·대사·캐릭터 참조를 연결해주세요.", this);
                 enabled = false;
                 return;
             }
 
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+            appearanceFade.gameObject.SetActive(false);
 
-            bool useHumanoid = SceneController.StoryId == "AfterTutorialC";
-            normalCharacters.SetActive(useHumanoid == false);
-            humanoidCharacters.SetActive(useHumanoid);
-            
-            Transform characters = useHumanoid ? humanoidCharacters.transform : normalCharacters.transform;
+            // 네 모델의 렌더러는 한 번만 찾고, 화자가 바뀌면 사용할 쌍만 교체한다.
+            normalTortoiseRenderers = normalCharacters.transform.Find("Tortoise_Left")
+                .GetComponentsInChildren<Renderer>(true);
+            normalHareRenderers = normalCharacters.transform.Find("Hare_Right")
+                .GetComponentsInChildren<Renderer>(true);
+            humanoidTortoiseRenderers = humanoidCharacters.transform.Find("Tortoise_Left")
+                .GetComponentsInChildren<Renderer>(true);
+            humanoidHareRenderers = humanoidCharacters.transform.Find("Hare_Right")
+                .GetComponentsInChildren<Renderer>(true);
 
-            tortoiseRenderers = characters.Find("Tortoise_Left").GetComponentsInChildren<Renderer>(true);
-            hareRenderers = characters.Find("Hare_Right").GetComponentsInChildren<Renderer>(true);
+            // 첫 대사가 나레이션일 때 사용할 장면별 기본 모델 구성.
+            SetCharacterGroup(SceneController.StoryId == "AfterTutorialC");
 
             using (var reader = new StringReader(storyTable.text))
             {
@@ -94,11 +120,17 @@ namespace HareAndTortoise
 
         public void NextLine()
         {
-            if (isFinished || lines.Count == 0) return;
+            if (isFinished || isChangingAppearance || lines.Count == 0) return;
+            SoundManager.Play(SoundEffect.DialogueNext);
             lineIndex++;
             if (lineIndex < lines.Count)
             {
-                ShowLine();
+                string speaker = lines[lineIndex].Speaker;
+                if (normalCharacters.activeSelf &&
+                    (speaker == "HumanoidHare" || speaker == "HumanoidTortoise"))
+                    StartCoroutine(ChangeAppearance());
+                else
+                    ShowLine();
                 return;
             }
 
@@ -106,22 +138,108 @@ namespace HareAndTortoise
             SceneController.FinishStory();
         }
 
+        // 현재 스토리만 종료한다. 다음 씬과 흑화 저장은 기존 종료 로직을 그대로 사용한다.
+        public void SkipStory()
+        {
+            if (isFinished || isChangingAppearance || lines.Count == 0 || enabled == false) return;
+            isFinished = true;
+            SceneController.FinishStory();
+        }
+
+        private IEnumerator ChangeAppearance()
+        {
+            isChangingAppearance = true;
+            appearanceFade.transform.SetAsLastSibling();
+            appearanceFade.gameObject.SetActive(true);
+
+            try
+            {
+                // 완전히 어두워진 뒤에만 모델과 다음 대사를 함께 교체한다.
+                yield return FadeAppearance(0f, 1f);
+                ShowLine();
+                yield return FadeAppearance(1f, 0f);
+            }
+            finally
+            {
+                // 전환이 중단돼도 검은 화면과 입력 잠금이 남지 않도록 정리한다.
+                if (appearanceFade != null) appearanceFade.gameObject.SetActive(false);
+                isChangingAppearance = false;
+            }
+        }
+
+        private IEnumerator FadeAppearance(float from, float to)
+        {
+            float elapsed = 0f;
+            float duration = Mathf.Max(0.01f, appearanceFadeDuration);
+            Color color = Color.black;
+            color.a = from;
+            appearanceFade.color = color;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                color.a = Mathf.Lerp(from, to, elapsed / duration);
+                appearanceFade.color = color;
+                yield return null;
+            }
+        }
+
         private void ShowLine()
         {
             StoryLine line = lines[lineIndex];
-            string speaker = line.Speaker == "Hare" ? "토끼"
-                : line.Speaker == "Tortoise" ? "거북이" : line.Speaker;
+            string speaker;
+            bool hareSpeaking = false;
+            bool tortoiseSpeaking = false;
+
+            switch (line.Speaker)
+            {
+                case "Narrator":
+                    // 직전 모델 구성은 유지하고 이름 박스만 숨긴다.
+                    speaker = "";
+                    break;
+                case "Hare":
+                    SetCharacterGroup(false);
+                    speaker = "토끼";
+                    hareSpeaking = true;
+                    break;
+                case "Tortoise":
+                    SetCharacterGroup(false);
+                    speaker = "거북이";
+                    tortoiseSpeaking = true;
+                    break;
+                case "HumanoidHare":
+                    SetCharacterGroup(true);
+                    speaker = "토끼(?)";
+                    hareSpeaking = true;
+                    break;
+                case "HumanoidTortoise":
+                    SetCharacterGroup(true);
+                    speaker = "거북이(?)";
+                    tortoiseSpeaking = true;
+                    break;
+                default:
+                    Debug.LogError("알 수 없는 스토리 화자: " + line.Speaker, this);
+                    enabled = false;
+                    return;
+            }
+
+            characterBox.SetActive(line.Speaker != "Narrator");
             characterText.SetText(speaker);
             lineText.SetText(line.Text);
-            SetBrightness(tortoiseRenderers, line.Speaker == "Tortoise" ? 1f : 0.3f);
-            SetBrightness(hareRenderers, line.Speaker == "Hare" ? 1f : 0.3f);
+            SetBrightness(tortoiseRenderers, tortoiseSpeaking ? 1f : 0.3f);
+            SetBrightness(hareRenderers, hareSpeaking ? 1f : 0.3f);
+        }
 
+        private void SetCharacterGroup(bool useHumanoid)
+        {
+            normalCharacters.SetActive(useHumanoid == false);
+            humanoidCharacters.SetActive(useHumanoid);
+            tortoiseRenderers = useHumanoid ? humanoidTortoiseRenderers : normalTortoiseRenderers;
+            hareRenderers = useHumanoid ? humanoidHareRenderers : normalHareRenderers;
         }
         
         private void SetBrightness(Renderer[] renderers, float brightness)
         {
-            MaterialPropertyBlock block = new MaterialPropertyBlock();
-
             for (int i = 0; i < renderers.Length; i++)
             {
                 Material[] materials = renderers[i].sharedMaterials;
@@ -141,10 +259,10 @@ namespace HareAndTortoise
                     color.g *= brightness;
                     color.b *= brightness;
 
-                    block.Clear();
-                    renderers[i].GetPropertyBlock(block, j);
-                    block.SetColor(property, color);
-                    renderers[i].SetPropertyBlock(block, j);
+                    colorBlock.Clear();
+                    renderers[i].GetPropertyBlock(colorBlock, j);
+                    colorBlock.SetColor(property, color);
+                    renderers[i].SetPropertyBlock(colorBlock, j);
                 }
             }
         }
