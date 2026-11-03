@@ -13,6 +13,9 @@ namespace HareAndTortoise
         private static readonly int IsSleeping = Animator.StringToHash("IsSleeping");
 
         private CancellationToken destroyToken;
+
+        [Header("Level Design")] 
+        [SerializeField] private float moveSpeed = 3.5f;
         
         [Header("Goal Settings")]
         [SerializeField] private Transform goalPoint; // 토끼의 목표 지점
@@ -36,6 +39,7 @@ namespace HareAndTortoise
         [SerializeField] private float horizontalImpulse = 8f; // 수평 넉백
         [SerializeField] private float upwardImpulse = 5f; // 수직(위) 넉백
         [SerializeField] private float attackedDuration = 10f; // 피격 후 복귀를 위해 기다리는 시간
+        [SerializeField] private float spinImpulse = 15f; // 공중제비를 위한 회전 
 
         [Header("Ragdoll Settings")]
         [SerializeField] private Rigidbody ragdollHips; // 골반 Rigidbody
@@ -256,7 +260,7 @@ namespace HareAndTortoise
 
         private void FollowStageRoute()
         {
-            SetHareMoving(3.5f);
+            SetHareMoving(moveSpeed);
             if (agent.pathPending) return;
             Transform target = waypointIndex < inlineWaypoints.childCount
                 ? inlineWaypoints.GetChild(waypointIndex)
@@ -302,7 +306,7 @@ namespace HareAndTortoise
                 FollowStageRoute();
                 return;
             }
-            SetHareMoving(3.5f);
+            SetHareMoving(moveSpeed);
             if (agent.pathPending) return;
             if (agent.hasPath == false || (agent.destination - goalPoint.position).sqrMagnitude > 0.01f)
             {
@@ -337,14 +341,14 @@ namespace HareAndTortoise
         private async UniTaskVoid Sleep()
         {
             animator.SetBool(IsSleeping, true);
-            await UniTask.WaitForSeconds(10f, cancellationToken: destroyToken);
+            await UniTask.WaitForSeconds(attackedDuration, cancellationToken: destroyToken);
             animator.SetBool(IsSleeping, false);
             SetReturnStat();
         }
 
         private void SetReturnStat()
         {
-            SetHareMoving(3.5f);
+            SetHareMoving(moveSpeed);
             state = HareState.Returning;
         }
 
@@ -413,11 +417,20 @@ namespace HareAndTortoise
             {
                 SetRagdollActive(true);
 
+                Vector3 spinAxis = Vector3.Cross(Vector3.up, direction);
+
+                Vector3 spinVelocity = spinAxis * spinImpulse;
+                Vector3 spinCenter = ragdollHips.worldCenterOfMass;
                 for (int i = 0; i < ragdollBodies.Length; i++)
                 {
                     Rigidbody boneBody = ragdollBodies[i];
-                    boneBody.linearVelocity = impulse;
-                    boneBody.angularVelocity = Vector3.zero;
+
+                    Vector3 offset = boneBody.worldCenterOfMass - spinCenter;
+
+                    boneBody.linearVelocity = impulse + Vector3.Cross(spinVelocity, offset);
+
+                    boneBody.maxAngularVelocity = 20f;
+                    boneBody.angularVelocity = spinVelocity;
                 }
                 
                 RecoverFromRagdoll();

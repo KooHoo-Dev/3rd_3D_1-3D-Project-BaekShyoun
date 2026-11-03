@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e3ed2d74a53fc5641af40374f1be52a4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 31900000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 236357
+  packageName: TPS_Grenade
+  packageVersion: 1.0
+  assetPath: Assets/TPS_Grenade_Animset/Model/WM_Master_Unity_Mask.mask
+  uploadId: 535127

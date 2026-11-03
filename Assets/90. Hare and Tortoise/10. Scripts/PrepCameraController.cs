@@ -64,6 +64,7 @@ namespace HareAndTortoise
 
             position.y = terrain.SampleHeight(position) + terrain.GetPosition().y;
 
+            if (RaceManager.Instance.TryUseLandmine() == false) return;
             Instantiate(landminePrefab, position, Quaternion.identity);
         }
 

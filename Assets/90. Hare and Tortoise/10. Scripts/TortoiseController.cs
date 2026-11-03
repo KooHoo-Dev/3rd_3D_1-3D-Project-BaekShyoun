@@ -46,7 +46,7 @@ namespace HareAndTortoise
         private bool hasAimTarget;
         private bool isAimValid;
 
-        private bool IsAiming => 
+        public bool IsAiming => 
             RaceManager.Instance.CanAttack && RaceManager.Instance.canStartTortoise && heldGrenade != null
             && SimpleInput.GetMouseButton(SimpleInput.MouseButton.Right);
         
@@ -254,6 +254,7 @@ namespace HareAndTortoise
             {
                 if (heldGrenade == null)
                 {
+                    if (RaceManager.Instance.GrenadeCount <= 0) return;
                     heldGrenade = Instantiate(grenadePrefab, grenadeHoldPoint, false);
 
                     heldGrenade.transform.localPosition = Vector3.zero;
@@ -283,6 +284,7 @@ namespace HareAndTortoise
         private void ThrowGrenade()
         {
             if (heldGrenade == null || isAimValid == false) return;
+            if (RaceManager.Instance.TryUseGrenade() == false) return;
             GameObject grenade = heldGrenade;
             heldGrenade = null;
 

@@ -52,6 +52,15 @@ namespace HareAndTortoise
         [Header("Cameras")]
         [SerializeField] private CinemachineCamera[] cameras;
         [SerializeField] private CinemachineBrain mainCam;
+
+        [Header("ItemCounts")]
+        [SerializeField] private int grenadeCount = 3;
+        [SerializeField] private int landmineCount = 3;
+        [SerializeField] private UIController itemUI;
+
+        public int GrenadeCount => grenadeCount;
+        public int LandmineCount => landmineCount;
+        
         
         // 승리 결정
         private bool canDecideWinner = false;
@@ -163,6 +172,22 @@ namespace HareAndTortoise
             // 이건 진짜 임시. 대충 초기화 로직임
             if (SimpleInput.GetKeyDown(Key.Digit0)) SceneManager.LoadScene(0);
             if (SimpleInput.GetKeyDown(Key.Digit1)) SceneManager.LoadScene(1);
+        }
+
+        public bool TryUseGrenade()
+        {
+            if (grenadeCount <= 0) return false;
+            grenadeCount--;
+            itemUI.RefreshCounts();
+            return true;
+        }
+        
+        public bool TryUseLandmine()
+        {
+            if (landmineCount <= 0) return false;
+            landmineCount--;
+            itemUI.RefreshCounts();
+            return true;
         }
 
         private void CheckStage()
